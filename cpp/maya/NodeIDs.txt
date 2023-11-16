@@ -1,0 +1,22 @@
+
+Node IDs:
+For plug-ins that will forever be internal to your site use the numeric range 0 - 0x7ffff (524288 ids) 
+
+
+ComponentMatrix::type_id(0x9000000);
+ComponentNode::type_id(0x9000001);
+
+
+CtrlNode::type_id(0x9000002);
+
+
+MetaDataNode::type_id(0x9000010);
+
+
+Ik2bSolver::type_id(0x9000020);
+
+
+SpaceSwitchNode::type_id(0x9000030);
+DenoiseNode::type_id(0x9000035);
+
+

@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Darkest",
+      "type": "shell",
+      "command": "buildType=${input:buildType} run=${input:run} sh .vscode/scripts/build.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+  
+    {
+      "label": "Clean Workspace",
+      "type": "shell",
+      "command": "sh .vscode/scripts/clean_workspace.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+  ],
+
+  // "inputs": [
+  //   {
+  //     "id": "buildType",
+  //     "type": "command",
+  //     "command": "extension.commandVariable.promptStringRemember",
+  //     "args": {
+  //       "key": "buildMode",
+  //       "description": "Select build type (debug or release):"
+  //     }
+  //   }
+  // ]
+
+  "inputs": [
+    {
+      "id": "buildType",
+      "description": "Build Type:",
+      "default": "Release",
+      "type": "promptString"
+    },
+    {
+      "id": "run",
+      "description": "Run module after build:",
+      "default": "face-annotation-tool",
+      "type": "promptString"
+    },
+  ]
+}
