@@ -14,8 +14,6 @@
 
 
 
-
-
 namespace ui {
 
 
@@ -29,6 +27,8 @@ namespace ui {
     */
 
     cv::Point lefttop, righttop, rightbottom, leftbottom, left, top, right, bottom, center;
+    std::vector<cv::Point> points;
+
     // Constructors
     DBox(int left, int top, int right, int bottom)
       : lefttop(left, top)
@@ -40,10 +40,22 @@ namespace ui {
       , right(right, (top+bottom)/2)
       , bottom((left+right)/2, bottom)
       , center((left+right)/2, (top+bottom)/2)
+      , points_to_array()
     {};
     // Destructors
     ~DBox() {};
-  
+
+    void points_to_array() {
+      points[0]=lefttop;
+      points[1]=righttop;
+      points[2]=rightbottom;
+      points[3]=leftbottom;
+      points[4]=left;
+      points[5]=top;
+      points[6]=right;
+      points[7]=bottom;
+      points[8]=center;
+    }
     // cv::Point get_bbox_enter(int left, int top, int right, int bottom) {return cv::Point((left+right/2), (top+bottom/2));}
   };
 
@@ -52,7 +64,6 @@ namespace ui {
     int thicka = 1;
     int thickb = 2;
     int thickc = 4;
-
   };
 
 
@@ -69,30 +80,30 @@ namespace ui {
 
   struct StyleLight : StyleOCVUi {
     // Constructor
-    // StyleLight()
-    //   : StyleOCVUi()
-    //   , cola{255, 255, 255}  // almost white
-    //   , colb{225, 225, 225}  // light grey
-    //   , colc{35, 35, 35}     // dark grey
-    //   , cold{0, 0, 0}        // black
-    //   , fontl("/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Light.ttf")
-    //   , fontr("/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Regular.ttf")
-    //   , fontb("/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Bold.ttf")
-    //   , ft2l->loadFontData(fontrl)
-    // {};
-    // // Destructors
-    // ~StyleLight() {};
+
+    StyleLight()
+      : StyleOCVUi()
+      , cola{255, 255, 255}  // almost white
+      , colb{225, 225, 225}  // light grey
+      , colc{35, 35, 35}     // dark grey
+      , cold{0, 0, 0}        // black
+      , fontl("/home/oa/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Light.ttf")
+      , fontr("/home/oa/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Regular.ttf")
+      , fontb("/home/oa/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Bold.ttf")
+    {};
+    // Destructors
+    ~StyleLight() {};
 
     // Color
-    cv::Scalar cola = {255, 255, 255};  // almost white;
-    cv::Scalar colb = {225, 225, 225} ; // light grey;
-    cv::Scalar colc = {35, 35, 35};     // dark grey;
-    cv::Scalar cold = {0, 0, 0};        // black;
+    cv::Scalar cola;  // almost white;
+    cv::Scalar colb;  // light grey;
+    cv::Scalar colc;  // dark grey;
+    cv::Scalar cold;  // black;
 
     // Fonts
-    std::string fontl = "/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Light.ttf";
-    std::string fontr = "/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Regular.ttf";
-    std::string fontb = "/home/oa/Dropbox/code/oa/resources/fonts/intel/IntelOneMono-Bold.ttf";
+    std::string fontl;
+    std::string fontr;
+    std::string fontb;
 
   };
 
@@ -138,8 +149,7 @@ namespace ui {
     cv::Mat imtxt;
     cv::Mat imout;
 
-    int imwidth;
-    int imheight;
+    cv::Size imsize;
 
     int thicka = 1;
     int thickb = thicka*2;
@@ -155,44 +165,47 @@ namespace ui {
 
 
     void set_image(cv::Mat &img) {
-      // img.convertTo(imcv, CV_32FC3, 1.0/255);
       imcv = img;
-      imheight = imcv.size[0];
-      imwidth = imcv.size[1];
-      imsh = cv::Mat(imcv.size(), CV_8UC3, cv::Scalar(0, 0, 0, 0));
-      imtxt = cv::Mat(imcv.size(), CV_8UC3, cv::Scalar(0, 0, 0, 0));
-      imout = cv::Mat(imcv.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+      imsize = img.size();
+      imsh = cv::Mat(imcv.size(), CV_8UC4, cv::Scalar(255, 255, 255, 0));
+      imtxt = cv::Mat(imcv.size(), CV_8UC4, cv::Scalar(255, 255, 255, 0));
+      imout = cv::Mat(imcv.size(), CV_8UC3, cv::Scalar(255, 0, 0));
     };
 
 
-    double get_dbox_scaled_edge(ui::DBox& dbox, double scale=0.1) {
+    double get_dbox_scaled_edge(ui::DBox& dbox, double scale) {
       return double(std::min((dbox.right.x-dbox.left.x), (dbox.top.y-dbox.bottom.y))) * scale;
     };
 
 
-    void dbox_outline(cv::Mat& img, ui::DBox& dbox, cv::Scalar rgb, int opacity) {
+    void dbox_outline(ui::DBox& dbox, cv::Scalar rgb, int opacity) {
       /* Draw a rectengular outline for the given bbox. */
       cv::Scalar color(rgb[0], rgb[1], rgb[2], opacity);
-      cv::rectangle(img, dbox.lefttop, dbox.rightbottom, color, thicka);
+      cv::rectangle(imsh, dbox.lefttop, dbox.rightbottom, color, thicka);
     };
 
 
-    void dbox_frame(cv::Mat& img, ui::DBox& dbox, cv::Scalar rgb, double scale=0.1, int opacity=255) {
+    void dbox_frame(ui::DBox& dbox, cv::Scalar rgb, int opacity=127, double scale=0.1) {
       // left, top, right, bottom
       cv::Scalar color(rgb[0], rgb[1], rgb[2], opacity);
       double edgs = get_dbox_scaled_edge(dbox, scale);
       // left top
-      cv::line(img, dbox.lefttop, cv::Point(dbox.lefttop.x, dbox.lefttop.y-edgs), color, thickb);
-      cv::line(img, dbox.lefttop, cv::Point(dbox.lefttop.x-edgs, dbox.lefttop.y), color, thickb);
+      cv::line(imsh, dbox.lefttop, cv::Point(dbox.lefttop.x, dbox.lefttop.y-edgs), color, thickb);
+      cv::line(imsh, dbox.lefttop, cv::Point(dbox.lefttop.x-edgs, dbox.lefttop.y), color, thickb);
       // right top
-      cv::line(img, dbox.righttop, cv::Point(dbox.righttop.x, dbox.righttop.y-edgs), color, thickb);
-      cv::line(img, dbox.righttop, cv::Point(dbox.righttop.x+edgs, dbox.righttop.y), color, thickb);
+      cv::line(imsh, dbox.righttop, cv::Point(dbox.righttop.x, dbox.righttop.y-edgs), color, thickb);
+      cv::line(imsh, dbox.righttop, cv::Point(dbox.righttop.x+edgs, dbox.righttop.y), color, thickb);
       // right bottom
-      cv::line(img, dbox.rightbottom, cv::Point(dbox.rightbottom.x, dbox.rightbottom.y+edgs), color, thickb);
-      cv::line(img, dbox.rightbottom, cv::Point(dbox.rightbottom.x+edgs, dbox.rightbottom.y), color, thickb);
+      cv::line(imsh, dbox.rightbottom, cv::Point(dbox.rightbottom.x, dbox.rightbottom.y+edgs), color, thickb);
+      cv::line(imsh, dbox.rightbottom, cv::Point(dbox.rightbottom.x+edgs, dbox.rightbottom.y), color, thickb);
       // left bottom
-      cv::line(img, dbox.leftbottom, cv::Point(dbox.leftbottom.x, dbox.leftbottom.y+edgs), color, thickb);
-      cv::line(img, dbox.leftbottom, cv::Point(dbox.leftbottom.x-edgs, dbox.leftbottom.y), color, thickb);
+      cv::line(imsh, dbox.leftbottom, cv::Point(dbox.leftbottom.x, dbox.leftbottom.y+edgs), color, thickb);
+      cv::line(imsh, dbox.leftbottom, cv::Point(dbox.leftbottom.x-edgs, dbox.leftbottom.y), color, thickb);
+    };
+
+
+    void dbox_contours() {
+      std::cout << "draw contour" << std::endl;
     };
 
 
@@ -207,7 +220,7 @@ namespace ui {
       if (draw_bbox == true) {
         cv::rectangle(imsh, pos, cv::Point(pos.x+txtwh.width, pos.y+txtwh.height), color, -1);
       }
-      ft2r->putText(imtxt, text, pos, fonth, style.cold, -1, cv::LINE_AA, false);
+      ft2r->putText(imtxt, text, pos, fonth, style.cola, -1, cv::LINE_AA, false);
     };
 
 
@@ -218,7 +231,7 @@ namespace ui {
       For example;
         type elem = matrix.ptr<type>(i)[N~c~*j+c]
 
-      where:
+      Where:
         type: the datatype(float, int, char ect..)
         i: row you're interested in
         Nc: the number of channels
@@ -228,14 +241,25 @@ namespace ui {
       For information on other c->c++ conversion check out this link: Source
 
       */
-
+      imcv.convertTo(imcv, CV_32FC3);
+      imsh.convertTo(imsh, CV_32FC4);
+      imtxt.convertTo(imtxt, CV_32FC4);
+      imout.convertTo(imout, CV_32FC3);
 
       cv::Mat imsh_mask;
       cv::inRange(imsh, cv::Scalar(0,0,0,1), cv::Scalar(255,255,255,255), imsh_mask);
-      // imout = imsh_mask;
-      imout = imcv;
 
-
+      for(int y=0; y<imcv.size().height; y++) {
+        for(int x=0; x<imcv.size().width; x++) {
+          for(int c=0; c<imcv.channels(); c++) {
+            imout.at<cv::Vec3f>(y,x)[c] = (
+              (imcv.at<cv::Vec3f>(y,x)[c] * (1.0-imsh.at<cv::Vec4f>(y,x)[3]))
+              +(imsh.at<cv::Vec4f>(y,x)[c] * imsh.at<cv::Vec4f>(y,x)[3]) * (1.0-imtxt.at<cv::Vec4f>(y,x)[3])
+              +(imtxt.at<cv::Vec4f>(y,x)[c] * imtxt.at<cv::Vec4f>(y,x)[3])
+            );
+          }
+        }
+      }
       // imcv.convertTo(imcv, CV_8UC3);
       // int numberOfPixels = imcv.rows * imcv.cols * imcv.channels();
       // Get floating point pointers to the data matrices
@@ -245,81 +269,10 @@ namespace ui {
       // char8_t* pimout = reinterpret_cast<char8_t*>(imout.data);
       // Assuming imsh, imtxt, imcv are cv::Mat objects
 
-      // masksh.convertTo(masksh, CV_8UC1, 1.0/255);
-
-      // for (int channel = 0; channel < 3; ++channel) {
-      //   imout.col(channel) =
-      //     ((imcv.col(channel) * (1.0 - masks))
-      //     +(imsh.col(channel) * masks) * (1.0 - maskt))
-      //     +(imtxt.col(channel) * maskt);
-      // }
-      // for (int y=0; y<imcv.rows; y++) {
-      //   for (int x=0; x<imcv.cols; x++) {
-      //     int idxrgb = x * 3 + y*imcv.step;  // Blue
-      //     int idxa = x + y*imcv.step;
-
-      //     int B = pimcv[idxrgb];
-      //     int G = pimcv[idxrgb+1];
-      //     int R = pimcv[idxrgb+2];
-
-      //     // int idxsh = x * 4 + y*imcv.step;
-      //     int Bsh = pimsh[idxrgb];
-      //     int Gsh = pimsh[idxrgb+1];
-      //     int Rsh = pimsh[idxrgb+2];
-      //     // int Ash = pimsh[idxsh+3];
-
-      //     pimout[idxrgb] = B;
-      //     pimout[idxrgb+1] = G;
-      //     pimout[idxrgb+2] = R;
-      //   }
-      // }
-
-      // double alpha = 1.0; /*< Simple contrast control */
-      // int beta = 0;       /*< Simple brightness control */
-
-      // for(int y = 0; y < imcv.rows; y++) {
-      //   for(int x = 0; x < imcv.cols; x++) {
-      //     for(int c = 0; c < imcv.channels(); c++) {
-      //       imout.at<cv::Vec3b>(y,x)[c] = cv::saturate_cast<uchar>(alpha*imcv.at<cv::Vec3b>(y,x)[c] + beta);
-      //     }
-      //   }
-      // }
-
-      
-
-
-      // imout.convertTo(imout, CV_8UC3);
-      // imcv.convertTo(imcv, CV_8UC4);
-      // cv::Mat imshmask;
-      // cv::extractChannel(imsh, imshmask, 3);
-      // imshmask.convertTo(imshmask, CV_8UC4);
-
-      // alphaBlend(imsh, imcv, imshmask, imout);
-
+      imout.convertTo(imout, CV_8UC4);
       return imout;
     }
 
-
-    // void alphaBlend(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha, cv::Mat& outImage) {
-    //   // Find number of pixels.
-    //   int numberOfPixels = foreground.rows * foreground.cols * foreground.channels();
-
-    //   // Get floating point pointers to the data matrices
-    //   uint8_t* fptr = reinterpret_cast<uint8_t*>(foreground.data);
-    //   uint8_t* bptr = reinterpret_cast<uint8_t*>(background.data);
-    //   uint8_t* aptr = reinterpret_cast<uint8_t*>(alpha.data);
-    //   uint8_t* outImagePtr = reinterpret_cast<uint8_t*>(outImage.data);
-
-    //   // Loop over all pixesl ONCE
-    //   for(
-    //     int i = 0;
-    //     i < numberOfPixels;
-    //     i++, outImagePtr++, fptr++, aptr++, bptr++
-    //   )
-    //   {
-    //     *outImagePtr = (*fptr)*(*aptr) + (*bptr)*(1 - *aptr);
-    //   }
-    // };
   };
 
 

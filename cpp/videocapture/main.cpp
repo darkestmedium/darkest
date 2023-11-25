@@ -12,8 +12,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/freetype.hpp>
 #include <opencv2/videoio.hpp>
-
 #include <opencv2/highgui.hpp>
+
 
 // Custom includes
 #include "../api/ocvui.hpp"
@@ -23,17 +23,13 @@
 
 
 
+
 int main(int, char**) {
 
   ui::StyleLight style;
-
-  cv::Ptr<cv::freetype::FreeType2> ft2r;
-  ft2r = cv::freetype::createFreeType2();
-  ft2r->loadFontData(style.fontr, 0);
-
   cv::dnn::Net net = cv::dnn::readNetFromCaffe(
-    "/home/oa/Dropbox/code/oa/resources/ml/models/deploy.prototxt",
-    "/home/oa/Dropbox/code/oa/resources/ml/models/res10_300x300_ssd_iter_140000_fp16.caffemodel"
+    "/home/oa/Dropbox/code/darkest/resources/ml/models/deploy.prototxt",
+    "/home/oa/Dropbox/code/darkest/resources/ml/models/res10_300x300_ssd_iter_140000_fp16.caffemodel"
   );
   // Model parameters
   cv::Size inwh(256, 256);
@@ -41,7 +37,7 @@ int main(int, char**) {
   int conf_treshold(75);
 
   std::string winname = "Camera Preview";
-	cv::namedWindow(winname, cv::WINDOW_NORMAL);
+  cv::namedWindow(winname, cv::WINDOW_NORMAL);
   cv::Mat frame;
 
   //--- INITIALIZE VIDEOCAPTURE
@@ -53,12 +49,11 @@ int main(int, char**) {
   std::cout << "Camera height: " + std::to_string(res[1]) << std::endl;
   // std::cout << "Camera fps: " + std::to_string(int(camera.get(cv::CAP_PROP_FPS))) << std::endl;
 
-
   ui::Draw uidraw(net);
   // camera.open(0, cv::CAP_ANY);
   // if (!camera.isOpened()) {
   //   std::cerr << "ERROR! Unable to open camera\n";
-  //   return -1;as
+  //   return -1;
   // }
   //--- GRAB AND WRITE LOOP
   std::cout << "Start grabbing" << std::endl << "Press any key to terminate" << std::endl;
@@ -117,15 +112,12 @@ int main(int, char**) {
       }
     }
 
-
     for (size_t idx = 0; idx < boxes.size(); ++idx) {
       cv::Rect box = boxes[idx];
-      // ui::BBox bbox(left, top, right, bottom);
-      // ui::DBox dbox(box.x, box.y, box.x+box.width, box.y+box.height);
       ui::DBox dbox(boxes[idx].x, boxes[idx].y, boxes[idx].x+boxes[idx].width, boxes[idx].y+boxes[idx].height);
 
-      uidraw.dbox_outline(uidraw.imsh, dbox, style.cola, 128);
-      uidraw.dbox_frame(uidraw.imsh, dbox, style.cola, 0.1, 128);
+      uidraw.dbox_outline(dbox, style.cola, 128);
+      uidraw.dbox_frame(dbox, style.cola, 0.1, 128);
 
       // ft2r->putText(frame, "left", dbox.left, 18, style.cola, -1, cv::LINE_AA, true);
       // ft2r->putText(frame, "top", dbox.top, 18, style.cola, -1, cv::LINE_AA, true);
@@ -140,11 +132,13 @@ int main(int, char**) {
 
     uidraw.text(
       cv::format("Inference time: %.2f ms", ui::get_inference_time(net, "ms")),
-      cv::Point(50, 50), style.cola, 18, 8, 128, true
+      cv::Point(50, 50), style.cola, 18, 8, 128, false
     );
+  
+    // uidraw.combine();
 
     // Show live and wait for a key with timeout long enough to show images
-    cv::imshow(winname, frame);
+    cv::imshow(winname, uidraw.combine());
   };
 
   // the camera will be deinitialized automatically in VideoCapture destructor

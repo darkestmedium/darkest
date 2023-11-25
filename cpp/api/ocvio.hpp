@@ -10,8 +10,6 @@
 
 
 
-
-
 namespace io {
   /* Input & Output wrapper namespace. */
 

@@ -15,7 +15,6 @@
       },
       "problemMatcher": []
     },
-  
     {
       "label": "Clean Workspace",
       "type": "shell",
@@ -26,18 +25,7 @@
       }
     },
   ],
-
-  // "inputs": [
-  //   {
-  //     "id": "buildType",
-  //     "type": "command",
-  //     "command": "extension.commandVariable.promptStringRemember",
-  //     "args": {
-  //       "key": "buildMode",
-  //       "description": "Select build type (debug or release):"
-  //     }
-  //   }
-  // ]
+  
 
   "inputs": [
     {
@@ -49,7 +37,7 @@
     {
       "id": "run",
       "description": "Run module after build:",
-      "default": "face-annotation-tool",
+      "default": "video-cap",
       "type": "promptString"
     },
   ]

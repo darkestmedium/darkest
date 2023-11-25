@@ -4,7 +4,6 @@
     "path": "."
   }
   ],
-
   "settings": {
     // Python
     "python.defaultInterpreterPath": "/usr/bin/python",
@@ -16,5 +15,9 @@
     "python.autoComplete.extraPaths": [
       "./python",
     ],
+    "files.associations": {
+      "ostream": "cpp"
+    },
   }
 }
+

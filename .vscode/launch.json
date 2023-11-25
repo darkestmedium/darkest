@@ -4,7 +4,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/videocapture",
+      "program": "${workspaceFolder}/build/img-read-display",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

@@ -1,7 +1,6 @@
 # Built-in imports
 # import json
-import sys
-sys.path.append("/Users/luky/Dropbox/code/oa/python")
+import sys; sys.path.append("/Users/luky/Dropbox/code/oa/python")
 
 # Third-party imports
 from api import np
@@ -144,7 +143,6 @@ if __name__ == "__main__":
 	# autoencoder.summary()
 	autoencoder.save(
 		f"{autoencoder.fimodel.filePath()}{autoencoder.name}.keras",
-		# save_format="keras",
 		overwrite=True,
 	)
 

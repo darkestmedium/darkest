@@ -17,8 +17,8 @@ import PySide6.QtCore as qtc
 
 
 # Open APi imports
-import api.Oa
-import api.OaUi
+import api.Darkest
+import api.DarkestUi
 
 
 # Resources file paths
