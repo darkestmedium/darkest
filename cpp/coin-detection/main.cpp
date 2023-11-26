@@ -132,8 +132,6 @@ int main() {
   Mat colorMap = displayConnectedComponents(imageDilated);
   imshow(windowName, imageCopy);
 
-
-
   ///
   /// Detect coins using Contour Detection
   ///

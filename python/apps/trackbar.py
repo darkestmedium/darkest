@@ -14,6 +14,7 @@ image = cv.imread("/home/ccpcpp/Dropbox/code/darkest/resources/images/underwater
 maxScaleUp = 100
 scaleFactor = 50
 
+
 # Callback functions
 def scaleImage(*args):
   scaleFactorDouble = 0.5+args[0]*0.01
@@ -25,8 +26,6 @@ def scaleImage(*args):
 
 if __name__ == '__main__':
   cv.createTrackbar(trackbarValue, winname, scaleFactor, maxScaleUp, scaleImage)
-
   cv.imshow(winname, image)
   cv.waitKey(0)
   cv.destroyAllWindows()
-
