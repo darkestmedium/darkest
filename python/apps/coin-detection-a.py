@@ -60,28 +60,24 @@ if __name__ == "__main__":
   ###
   ### YOUR CODE HERE
   ###
-  thresholdedImage1 = imageG.copy()
-  _, thresholdedImage1 = cv.threshold(imageG, 40, 255, cv.THRESH_BINARY)
+  _, thresholdedImage = cv.threshold(imageG.copy(), 32, 255, cv.THRESH_BINARY)
   # Display the thresholded image
   ###
   ### YOUR CODE HERE
   ###
-  plt.imshow(thresholdedImage1)
+  plt.imshow(thresholdedImage)
   plt.title("Tresholded Image")
   ###
   ### YOUR CODE HERE
   ###
-  structElement3 = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3,3))
-  imageEroded1 = cv.erode(thresholdedImage1, structElement3)
-  plt.imshow(imageEroded1)
+  thresholdedImage = cv.morphologyEx(
+    thresholdedImage,
+    cv.MORPH_OPEN,
+    cv.getStructuringElement(cv.MORPH_ELLIPSE, (4,4)),
+    iterations=4
+  )
+  plt.imshow(thresholdedImage)
   plt.title("Eroded Image1")
-  ###
-  ### YOUR CODE HERE
-  ###
-  structElement7 = cv.getStructuringElement(cv.MORPH_ELLIPSE, (7,7))
-  imageEroded2 = cv.erode(imageEroded1, structElement7)
-  plt.imshow(imageEroded2)
-  plt.title("Eroded Image2")
   ###
   ### YOUR CODE HERE
   ###
@@ -111,7 +107,7 @@ if __name__ == "__main__":
   ###
   ### YOUR CODE HERE
   ###
-  inverted_image = cv.bitwise_not(imageEroded2)
+  inverted_image = cv.bitwise_not(thresholdedImage)
   keypoints = detector.detect(inverted_image)
   # Draw detected blobs as red circles.
   # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
@@ -125,16 +121,15 @@ if __name__ == "__main__":
   ###
   ### YOUR CODE HERE
   ###
-  # cv.circle(source, center[0], 1, cola, 2, cv.LINE_AA)
-    # for keypoint in keypoints:
-    #   point = (int(keypoint.pt[0]), int(keypoint.pt[1]))
-    #   cv.circle(image, point, int(keypoint.size), (0, 255, 0), 2, cv.LINE_AA)
-    #   cv.drawMarker(image, point, (0, 255, 0), cv.MARKER_CROSS, int(keypoint.size*0.25), 2, cv.LINE_AA)
+  for keypoint in keypoints:
+    point = (int(keypoint.pt[0]), int(keypoint.pt[1]))
+    cv.circle(image, point, int(keypoint.size*0.5), (0, 255, 0), 2, cv.LINE_AA)
+    cv.drawMarker(image, point, (0, 255, 0), cv.MARKER_CROSS, int(keypoint.size*0.25), 2, cv.LINE_AA)
   # Find connected components
   ###
   ### YOUR CODE HERE
   ###
-  th, imThresh = cv.threshold(imageEroded2, 127, 255, cv.THRESH_BINARY)
+  th, imThresh = cv.threshold(thresholdedImage, 127, 255, cv.THRESH_BINARY)
   # Find connected components
   _, imLabels = cv.connectedComponents(imThresh)
   # Print number of connected components detected
@@ -153,7 +148,7 @@ if __name__ == "__main__":
   ### YOUR CODE HERE
   ###
   # Find all contours in the image
-  contours, hierarchy = cv.findContours(imageEroded2, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+  contours, hierarchy = cv.findContours(thresholdedImage, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
   # Print the number of contours found
   ###
   ### YOUR CODE HERE
@@ -173,7 +168,7 @@ if __name__ == "__main__":
   bottom = top
   left = int(0.025 * image.shape[1])  # shape[1] = cols
   right = left
-  dst = cv.copyMakeBorder(np.ones_like(imageEroded2, imageEroded2.dtype), top, bottom, left, right, cv.BORDER_CONSTANT, None, 255)
+  dst = cv.copyMakeBorder(np.ones_like(thresholdedImage, thresholdedImage.dtype), top, bottom, left, right, cv.BORDER_CONSTANT, None, 255)
   dst = cv.resize(dst, (image.shape[1], image.shape[0]), cv.INTER_LINEAR)
   contoursOut, hierarchy = cv.findContours(dst, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
   print(f"Number of outside contours found = {contoursOut.__len__()}")
@@ -199,26 +194,20 @@ if __name__ == "__main__":
   ###
   ### YOUR CODE HERE
   ###
-  # cv.drawContours(image, contours[:-1], -1, (0,255,0), 2)
+  cv.drawContours(image, contours[:-1], -1, (0,255,0), 2)
   # Fit circles on coins
   ###
   ### YOUR CODE HERE
   ###
-  for cnt in contours:
-    # We will use the contour moments
-    # to find the centroid
+  for idx, cnt in enumerate(contours[:-1]):
     M = cv.moments(cnt)
     x = int(round(M["m10"]/M["m00"]))
     y = int(round(M["m01"]/M["m00"]))
-    # Mark the center
     cv.drawMarker(image, (x,y), (0, 255, 0), cv.MARKER_CROSS, 10, 1, cv.LINE_AA)
-    # Fit an ellipse
-    # We can fit an ellipse only
-    # when our contour has minimum
-    # 5 points
     if len(cnt) < 5: continue
     ellipse = cv.fitEllipse(cnt)
     cv.ellipse(image, ellipse, (255,0,125), 2, cv.LINE_AA)
+    cv.putText(image, str(idx+1), (x+8, y-8), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 1)
 
 
 
