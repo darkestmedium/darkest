@@ -52,11 +52,14 @@ if __name__ == "__main__":
     if not has_frame:	break
     frame = cv2.flip(frame, 1)
 
+
+
+    cchar = chr(cv2.waitKey(1))
+    print(cchar)
     key = cv2.waitKey(1)
     match key:
       case 99:  # c is pressed
         print(f"Key pressed: {key}")
-
       case 27:  # esc is pressed 
         break
       # case _: # esc is pressed 

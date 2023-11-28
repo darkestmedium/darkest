@@ -62,32 +62,21 @@ def pencilSketch(image, arguments=0, blur=5, edge=9, alpha=0.5):
   imageblur = cv2.medianBlur(imgrey, blur)
   imoutline = cv2.adaptiveThreshold(imageblur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, edge, blur)
   pencilSketchImage = cv2.addWeighted(imgrey, 1-alpha, imoutline, alpha, 0)
-  return imout
+  return pencilSketchImage
 
 
 
 
-# def spiderVerse(image, blur=5, edge=9, alpha=0.5, offset_r=5, offset_b=-5):
-#   imgrey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#   imageblur = cv2.medianBlur(imgrey, blur)
-#   imoutline = cv2.adaptiveThreshold(imageblur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, edge, blur)
+def dmt(image, blur=5, edge=9, alpha=0.5, offset_r=5, offset_b=-5):
+  imgrey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  imageblur = cv2.medianBlur(imgrey, blur)
+  imoutline = cv2.adaptiveThreshold(imageblur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, edge, blur)
 
-#   # Split the image into color channels
-#   b, g, r = cv2.split(image)
+  # Split the image into color channels
+  b, g, r = cv2.split(image)
 
-#   # Create red and blue channel offsets
-#   rows, cols = image.shape[:2]
-#   offset_matrix_r = np.roll(np.eye(rows, cols), offset_r, axis=(0, 1))
-#   offset_matrix_b = np.roll(np.eye(rows, cols), offset_b, axis=(0, 1))
 
-#   # Apply the offsets to the red and blue channels
-#   # r_offset = cv2.warpAffine(r, offset_matrix_r, (cols, rows))
-#   # b_offset = cv2.warpAffine(b, offset_matrix_b, (cols, rows))
-
-#   # Merge the channels back together
-#   distorted_img = cv2.merge([offset_matrix_b, g, offset_matrix_r])
-
-#   return distorted_img
+  return imoutline*imageblur
 
 
 
@@ -98,7 +87,7 @@ if __name__ == "__main__":
 
 
   # cv2.imshow(winname, pencilSketch(image))
-  cv2.imshow(winname, cartoonify(image))
+  cv2.imshow(winname, dmt(image))
 
 
   cv2.waitKey(0)

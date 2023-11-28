@@ -2,6 +2,7 @@
 import sys
 import argparse
 import math
+import logging
 # from enum import Enum
 # from typing import overload, final
 
@@ -14,6 +15,11 @@ import matplotlib.pyplot as plt
 # Darkest APi imports
 
 
+log = logging.getLogger("chroma-keying")
+log.addHandler(logging.StreamHandler(sys.stdout))
+log.setLevel(logging.DEBUG)
+# log.setLevel(logging.INFO)
+
 
 
 data = {
@@ -22,46 +28,44 @@ data = {
   # "colb": [0,255,0],  # brighter
   "colop": [87, 90, 88],  # darker
   "color": [106, 107, 105], # brighter
+  "softness": 0.
 }
 
 
 
-def get_luminance(color):
+def get_luminance(color) -> float:
   return 0.299 * color[2] + 0.587 * color[1] + 0.114 * color[0]
+
+
+def sort_colors():
+  """Sorts the colors by comparing the luminance of pressed and released colors
+  """
+  lumiop = get_luminance(data["colop"])
+  lumior = get_luminance(data["color"])
+  if lumiop > lumior:
+    data["colop"] = data["color"]
+    data["color"] = data["colop"]
+  else:
+    data["colop"] = data["colop"]
+    data["color"] = data["color"]
 
 
 def lmb(action, x, y, flags, userdata):
   """Left mouse button event method.
   """
-
   if action == cv2.EVENT_LBUTTONDOWN:
     data["colop"] = data["image"][y, x]
-    print(f"Sampled color on press:   {data['colop']} at {x} x {y}")
+    log.debug(f"Sampled color on press:   {data['colop']} at pixel {x} x {y}")
 
   if action == cv2.EVENT_LBUTTONUP:
     data["color"] = data["image"][y, x]
-    print(f"Sampled color on release: {data['color']} at {x} x {y}")
+    log.debug(f"Sampled color on release: {data['color']} at pixel {x} x {y}")
 
-  # Sort colors - compare the luminance of pressed and released colors
-  lumiop = get_luminance(data["colop"])
-  lumior = get_luminance(data["color"])
-  if lumiop < lumior:
-    data["colop"] = data["colop"]
-    data["color"] = data["color"]
-  elif lumiop > lumior:
-    data["colop"] = data["color"]
-    data["color"] = data["colop"]
-  else:
-    data["colop"] = data["colop"]
-    data["color"] = data["colop"]
-
-
-def tolerance(*args):
-  print(f"tolerance: {args[0]}")
+  sort_colors()
 
 
 def softness(*args):
-  print(f"softness: {args[0]}")
+  data["softness"] = args[0]
 
 
 def defringe(*args):
@@ -96,9 +100,8 @@ if __name__ == "__main__":
   source.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
 
   # Create trackbars
-  # cv2.createTrackbar("Tolerance", args.winName, 0, 255, tolerance)
-  cv2.createTrackbar("Softness", args.winName, 0, 255, tolerance)
-  cv2.createTrackbar("Defringe", args.winName, 0, 255, tolerance)
+  cv2.createTrackbar("Softness", args.winName, 0, 100, softness)
+  # cv2.createTrackbar("Defringe", args.winName, 0, 255, defringe)
 
   # Set Callbacks
   cv2.setMouseCallback(args.winName, lmb)
@@ -109,34 +112,52 @@ if __name__ == "__main__":
     image = cv2.flip(image, 1)
     data["image"] = image  # Pass data to callback functions
 
-    imback = cv2.imread(args.imagePath)
-    imback = cv2.resize(imback, (args.width, args.height))
-    # crop_background = imback[0:args.height, 0:args.width]
+    imgback = cv2.imread(args.imagePath)
+    imgback = cv2.resize(imgback, (args.width, args.height))  # resize
+    # crop_background = imgback[0:args.height, 0:args.width]  # crop
 
+    mask = cv2.inRange(
+      image, 
+      np.array(data["colop"]).astype(np.uint8),
+      np.array(data["color"]).astype(np.uint8)
+    )
+    # There are prolly better ways of doing it but sometimes the simplest ones are the best ^.^
+    # "It works on my machine"
+    softness = data["softness"]
+    if softness > 0: mask = cv2.blur(mask, (softness, softness))
+
+
+    image[mask != 0] = [0, 0, 0]
+    imgback[mask == 0] = [0, 0, 0]
+
+    # Defringe
+    # lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # a_channel = lab[:,:,1]
+    # th = cv2.threshold(a_channel,127,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+    # # masked = cv2.bitwise_and(image, image, mask = th)    # contains dark background
+    # m1 = image.copy()
+    # m1[th==0]=(255,255,255) 
+    # mlab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # dst = cv2.normalize(mlab[:,:,1], dst=None, alpha=0, beta=255,norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    # threshold_value = 100
+    # dst_th = cv2.threshold(dst, threshold_value, 255, cv2.THRESH_BINARY_INV)[1]
+    # mlab2 = mlab.copy()
+    # mlab[:,:,1][dst_th == 255] = 127
+    # img2 = cv2.cvtColor(mlab, cv2.COLOR_LAB2BGR)
+    # img2[th==0]=(255,255,255)
+
+    # imgout = imgback + image
+    imgout = imgback + image
   
-    lower = np.array(data["colop"]).astype(np.uint8)
-    upper = np.array(data["color"]).astype(np.uint8)
-    mask = cv2.inRange(image, lower, upper)
-    # res = cv2.bitwise_and(image, image, mask = mask)
-
-    masked_image = np.copy(image)
-
-    masked_image[mask != 0] = [0, 0, 0]
-    imback[mask == 0] = [0, 0, 0]
-
-    imout = imback + masked_image
-  
-
     key = cv2.waitKey(1)
     match key:
       case 99:  # c is pressed
         print(f"Key pressed: {key}")
       case 27:  # esc is pressed 
         break
-      # case _: # esc is pressed 
-      #   print(f"Key pressed: {key}")
 
-    cv2.imshow(args.winName, imout)
+
+    cv2.imshow(args.winName, imgout)
 
   source.release()
   cv2.destroyAllWindows()

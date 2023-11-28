@@ -52,6 +52,7 @@ if __name__ == "__main__":
       if confidence > conf_threshold:
         uidraw.get_bbox_ss((detections[0, 0, indx, 3], detections[0, 0, indx, 4], detections[0, 0, indx, 5], detections[0, 0, indx, 6]))
         uidraw.bbox_outline(opacity=opacity)
+        uidraw.text(f"person: {confidence}")
 
 
     uidraw.stats(opacity=opacity)

@@ -20,10 +20,9 @@ imagePath = "/home/ccpcpp/Dropbox/code/darkest/resources/images/CoinsA.png"
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('--imgpath', type=str, default='images/2.jpg', help="Image file path")
+  parser.add_argument('--imgpath', type=str, default='images/2.jpg', help="Image file path.")
   args = parser.parse_args()
   print(args)
-
 
 
 def syntaxCreator():
@@ -35,11 +34,7 @@ def syntaxCreator():
   parser.add_argument("--height", type=int, default=720, help="Height of the window")
   parser.add_argument("--camera", type=int, default=0, help="Index of the camera input, default is 0.")
   parser.add_argument("--winName", type=str, default="OpenCV Window", help="Name of the opencv window.")
-
   return parser.parse_args()
-
-
-
 
 
 def convertBGRtoGray(image):
@@ -63,7 +58,6 @@ def bgr_to_hsv_from_scratch(image):
   b = b.reshape((image.shape[0], image.shape[1]))
   g = g.reshape((image.shape[0], image.shape[1]))
   r = r.reshape((image.shape[0], image.shape[1]))
-
 
   v = np.maximum(np.maximum(r, g), b)
   s = np.where(v == 0, 0, (v-np.minimum(np.minimum(r, g), b)) / v)
