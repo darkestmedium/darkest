@@ -12,12 +12,12 @@ rm -r ./build
   -D CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
   -D CMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc \
   -D CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/g++ \
-  -S /home/oa/Dropbox/code/darkest \
-  -B /home/oa/Dropbox/code/darkest/build \
+  -S /home/"$(whoami)"/Dropbox/code/darkest \
+  -B /home/"$(whoami)"/Dropbox/code/darkest/build \
   -G "Unix Makefiles"
 
 /usr/bin/cmake \
-  --build /home/oa/Dropbox/code/darkest/build \
+  --build /home/"$(whoami)"/Dropbox/code/darkest/build \
   --config $buildType \
   --target all \
   -j 16 \
