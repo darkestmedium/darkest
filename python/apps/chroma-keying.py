@@ -13,79 +13,130 @@ import matplotlib.pyplot as plt
 
 # Darkest APi imports
 
-winname = "OpenCV Window"
-cv2.namedWindow(winname, cv2.WINDOW_NORMAL)
-imagePath = "/home/ccpcpp/Dropbox/code/darkest/resources/images/blemish.png"
 
 
 
-
-"""
-Description
-
-In this project, you will implement any algorithm of your choice for chroma-keying. We have linked to a few resources and pieces of code you can look at.
-
-Input: The input to the algorithm will be a video with a subject in front of a green screen.
-Output: The output should be another video where the green background is replaced with an interesting background of your choice. The new background could even be a video if you want to make it interesting.
-
-Controls: You can build a simple interface using HighGUI. It should contain the following parts.
-  Color Patch Selector: The interface should show a video frame and the user should be allowed to select a patch of green screen from the background. For simplicity, this patch can be a rectangular patch selected from a single frame. However, it is perfectly find to build an interface where you select multiple patches from one or more frames of the video.
-  Tolerance slider: This slider will control how different the color can be from the mean of colors sampled in the previous step to be included in the green background.
-  Softness slider (Optional): This slider will control the softness of the foreground mask at the edges.
-  Color cast slider (Optional): In a green screen environment, some of the green color also gets cast on the subject. There are some interesting ways the color cast can be reduced, but during the process of removing the color cast some artifacts are get introduced. So, this slider should control the amount of color cast removal we want.
-
-References:
-  Blue Screen Matting : This paper is a pioneering paper by Alvy Ray Smith and James Blinn. Alvy Ray Smith was a co-founder of Pixar, and winner of two technical oscar awards.
-  A C language implementation
-  Robust Chroma Keying System based on Human Visual Perception and Statistical Color Models
-  State of the Art (non-realtime) by Disney. Also checkout the video.
-"""
+data = {
+  "image": None,
+  # "cola": [0,255,0],  # darker
+  # "colb": [0,255,0],  # brighter
+  "colop": [87, 90, 88],  # darker
+  "color": [106, 107, 105], # brighter
+}
 
 
 
+def get_luminance(color):
+  return 0.299 * color[2] + 0.587 * color[1] + 0.114 * color[0]
 
-def color_picker(action, x, y, flags, userdata):
+
+def lmb(action, x, y, flags, userdata):
+  """Left mouse button event method.
+  """
 
   if action == cv2.EVENT_LBUTTONDOWN:
-    print("left mouse button pressed")
-    # get upper threshold
-
+    data["colop"] = data["image"][y, x]
+    print(f"Sampled color on press:   {data['colop']} at {x} x {y}")
 
   if action == cv2.EVENT_LBUTTONUP:
-    print("left mouse button released")
-    # get lower threshold
+    data["color"] = data["image"][y, x]
+    print(f"Sampled color on release: {data['color']} at {x} x {y}")
+
+  # Sort colors - compare the luminance of pressed and released colors
+  lumiop = get_luminance(data["colop"])
+  lumior = get_luminance(data["color"])
+  if lumiop < lumior:
+    data["colop"] = data["colop"]
+    data["color"] = data["color"]
+  elif lumiop > lumior:
+    data["colop"] = data["color"]
+    data["color"] = data["colop"]
+  else:
+    data["colop"] = data["colop"]
+    data["color"] = data["colop"]
 
 
+def tolerance(*args):
+  print(f"tolerance: {args[0]}")
+
+
+def softness(*args):
+  print(f"softness: {args[0]}")
+
+
+def defringe(*args):
+  print(f"defringe: {args[0]}")
+
+
+
+
+def syntaxCreator():
+  """Creates the command's syntax object and returns it.
+  """
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--imagePath", type=str, default="/home/ccpcpp/Dropbox/code/darkest/resources/images/that-space.png", help="Image file path.")
+  parser.add_argument("--width", type=int, default=1280, help="Width of the window")
+  parser.add_argument("--height", type=int, default=720, help="Height of the window")
+  parser.add_argument("--camera", type=int, default=0, help="Index of the camera input, default is 0.")
+  parser.add_argument("--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
+
+  return parser.parse_args()
 
 
 
 if __name__ == "__main__":
-  source = cv2.VideoCapture(0)
+
+  args = syntaxCreator()
+
+  cv2.namedWindow(args.winName, cv2.WINDOW_NORMAL)
+  source = cv2.VideoCapture(args.camera)
 
   source.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
-  source.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-  source.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+  source.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
+  source.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+
+  # Create trackbars
+  # cv2.createTrackbar("Tolerance", args.winName, 0, 255, tolerance)
+  cv2.createTrackbar("Softness", args.winName, 0, 255, tolerance)
+  cv2.createTrackbar("Defringe", args.winName, 0, 255, tolerance)
 
   # Set Callbacks
-  cv2.setMouseCallback(winname, color_picker)
+  cv2.setMouseCallback(args.winName, lmb)
 
 
-  key = 0
   while True:
-    has_frame, frame = source.read()
-    frame = cv2.flip(frame, 1)
+    _, image = source.read()
+    image = cv2.flip(image, 1)
+    data["image"] = image  # Pass data to callback functions
+
+    imback = cv2.imread(args.imagePath)
+    imback = cv2.resize(imback, (args.width, args.height))
+    # crop_background = imback[0:args.height, 0:args.width]
+
+  
+    lower = np.array(data["colop"]).astype(np.uint8)
+    upper = np.array(data["color"]).astype(np.uint8)
+    mask = cv2.inRange(image, lower, upper)
+    # res = cv2.bitwise_and(image, image, mask = mask)
+
+    masked_image = np.copy(image)
+
+    masked_image[mask != 0] = [0, 0, 0]
+    imback[mask == 0] = [0, 0, 0]
+
+    imout = imback + masked_image
+  
 
     key = cv2.waitKey(1)
     match key:
       case 99:  # c is pressed
         print(f"Key pressed: {key}")
-
       case 27:  # esc is pressed 
         break
       # case _: # esc is pressed 
       #   print(f"Key pressed: {key}")
 
-    cv2.imshow(winname, frame)
+    cv2.imshow(args.winName, imout)
 
   source.release()
   cv2.destroyAllWindows()

@@ -18,17 +18,35 @@ cv2.namedWindow(winname, cv2.WINDOW_NORMAL)
 
 
 
+def lmb(action, x, y, flags, userdata):
+  if action == cv2.EVENT_LBUTTONDOWN:
+    print("left mouse button pressed")
+
+  if action == cv2.EVENT_LBUTTONUP:
+    print("left mouse button released")
+
+
+def trackbar(*args):
+  print(f"Trackbar: {args[0]}")
+
+
+
 
 
 if __name__ == "__main__":
+  
   source = cv2.VideoCapture(0)
 
   source.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
   source.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
   source.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
+  # Create trackbars
+  cv2.createTrackbar("Trackbar", winname, 127, 255, trackbar)
 
-  key = 0
+  # Set Callbacks
+  cv2.setMouseCallback(winname, lmb)
+
   while True:
     has_frame, frame = source.read()
     if not has_frame:	break
@@ -48,3 +66,4 @@ if __name__ == "__main__":
 
   source.release()
   cv2.destroyAllWindows()
+

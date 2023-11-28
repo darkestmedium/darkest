@@ -26,6 +26,20 @@ if __name__ == "__main__":
 
 
 
+def syntaxCreator():
+  """Creates the command's syntax object and returns it.
+  """
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--imagePath", type=str, default="/home/ccpcpp/Dropbox/code/darkest/resources/images/that-space.png", help="Image file path.")
+  parser.add_argument("--width", type=int, default=1280, help="Width of the window")
+  parser.add_argument("--height", type=int, default=720, help="Height of the window")
+  parser.add_argument("--camera", type=int, default=0, help="Index of the camera input, default is 0.")
+  parser.add_argument("--winName", type=str, default="OpenCV Window", help="Name of the opencv window.")
+
+  return parser.parse_args()
+
+
+
 
 
 def convertBGRtoGray(image):
