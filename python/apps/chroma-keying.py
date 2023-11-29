@@ -74,7 +74,7 @@ def defringe(*args):
 
 
 
-def syntaxCreator():
+def syntax_creator():
   """Creates the command's syntax object and returns it.
   """
   parser = argparse.ArgumentParser()
@@ -90,7 +90,7 @@ def syntaxCreator():
 
 if __name__ == "__main__":
 
-  args = syntaxCreator()
+  args = syntax_creator()
 
   cv2.namedWindow(args.winName, cv2.WINDOW_NORMAL)
   source = cv2.VideoCapture(args.camera)
