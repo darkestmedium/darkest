@@ -1,4 +1,5 @@
 # Built-in imports
+import os
 import sys
 import argparse
 import math
@@ -42,15 +43,13 @@ def syntax_creator():
   """Creates the command's syntax object and returns it.
   """
   parser = argparse.ArgumentParser()
-  parser.add_argument("--imagePath", type=str, default="/home/ccpcpp/Dropbox/code/darkest/resources/images/that-space.png", help="Image file path.")
+  parser.add_argument("--filePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/images/that-space.png", help="Path to the file.")
   parser.add_argument("--width", type=int, default=1280, help="Width of the window")
   parser.add_argument("--height", type=int, default=720, help="Height of the window")
   parser.add_argument("--camera", type=int, default=0, help="Index of the camera input, default is 0.")
   parser.add_argument("--codec", type=str, default="MJPG", help="Stream codec")
   parser.add_argument("--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
   return parser.parse_args()
-
-
 
 
 if __name__ == "__main__":
@@ -80,9 +79,7 @@ if __name__ == "__main__":
         log.debug(f"Key pressed: {key}")
       case 27:  # esc is pressed 
         break
-      # case _: # esc is pressed 
-      #   log.debug(f"Key pressed: {key}")
-    
+
     cv2.imshow(args.winName, frame)
 
   source.release()

@@ -73,7 +73,7 @@ double sum_modified_laplacian(Mat image) {
     Mat absLaplacianY(abs(laplacianY));
 
     // Calculate the modified Laplacian
-    Mat modifiedLaplacian;
+    Mat modifiedLaplacian;https://www.dropbox.com/scl/fi/u382z4mcu45xbej4xz0x3/Lukas-Biernat-Tech-Reel-2023.mp4?rlkey=c9vsmxzasgdoc7gnzao7s0xtt&dl=0
     add(absLaplacianX, absLaplacianY, modifiedLaplacian);
 
     // Calculate the sum of the modified Laplacian
@@ -97,7 +97,7 @@ int main() {
   namedWindow(windowName, WINDOW_NORMAL);
 
   // Create a VideoCapture object
-  string videoCapturePath = "/home/oa/Dropbox/code/darkest/resources/video/focus-test.mp4";
+  string videoCapturePath = "/home/ccpcpp/Dropbox/code/darkest/resources/video/focus-test.mp4";
   VideoCapture cap(videoCapturePath);
 
   // Read first frame from the video

@@ -80,7 +80,6 @@ namespace ui {
 
   struct StyleLight : StyleOCVUi {
     // Constructor
-
     StyleLight()
       : StyleOCVUi()
       , cola{255, 255, 255}  // almost white

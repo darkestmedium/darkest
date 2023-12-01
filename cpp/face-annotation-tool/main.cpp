@@ -31,6 +31,7 @@ void drawRectangle(int action, int x, int y, int flags, void *userdata)
     rectangle(image, top_left_corner, bottom_right_corner, Scalar(0,255,0), 2, 8 );
     // Display image
     imshow("Window", image);
+    imwrite("face.png", temp(Range(topleft.y,bottomright.y),Range(topleft.x,bottomright.x)));
   }
    
 }

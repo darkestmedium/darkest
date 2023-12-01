@@ -2,6 +2,7 @@
 project(darkestapi LANGUAGES CXX)
 
 set(darkestapi_files
+  argparse.hpp
 	text.hpp
 	ocvui.hpp
 	ocvio.hpp

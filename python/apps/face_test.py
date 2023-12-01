@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
   win_name = "Camera Preview"
   cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
+
   net = cv2.dnn.readNetFromCaffe(
     "resources/ml/models/deploy.prototxt",
     "resources/ml/models/res10_300x300_ssd_iter_140000_fp16.caffemodel"
@@ -60,3 +61,7 @@ if __name__ == "__main__":
 
   source.release()
   cv2.destroyAllWindows()
+
+
+
+/home/ccpcpp/Dropbox/code/resources/video/pexels-olya-kobruseva-5901087 (720p).mp4

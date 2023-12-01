@@ -34,7 +34,7 @@ def stitch_images(images):
   if status == cv2.Stitcher_OK:
     return panorama
   else:
-    print(f"Panorama stitching failed with error code {status}")
+    log.error(f"Panorama stitching failed with error code {status}")
     return None
 
 

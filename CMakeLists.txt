@@ -19,7 +19,7 @@ find_package(OpenCV REQUIRED)
 
 
 # Add subdirectories recursively
-# add_subdirectory(cpp/api)
+add_subdirectory(cpp/api)
 
 
 # Build the maya plugin
@@ -54,4 +54,5 @@ endfunction()
 # add_app("cpp/morphology" "morphology" "main.cpp")
 # add_app("cpp/img-read" "img-read" "main.cpp")
 # add_app("cpp/submission" "submission" "main.cpp")
-add_app("cpp/video-cap" "video-cap" "main.cpp")
+# add_app("cpp/video-cap" "video-cap" "main.cpp")
+add_app("cpp/image" "image" "main.cpp")

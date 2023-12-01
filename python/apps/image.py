@@ -42,8 +42,8 @@ def syntax_creator():
   """Creates the command's syntax object and returns it.
   """
   parser = argparse.ArgumentParser()
-  parser.add_argument("--imagePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/images/that-space.png", help="Image file path.")
-  parser.add_argument("--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
+  parser.add_argument("-fp", "--filePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/images/that-space.png", help="Path to the file.")
+  parser.add_argument("-wn", "--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
   return parser.parse_args()
 
 
@@ -59,9 +59,7 @@ if __name__ == "__main__":
   # Set Callbacks
   cv2.setMouseCallback(args.winName, lmb)
 
-
-  image = cv2.imread(args.imagePath)
-
+  image = cv2.imread(args.filePath)
 
   # key = cv2.waitKey(1)
   # match key:

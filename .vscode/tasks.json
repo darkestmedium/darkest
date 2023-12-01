@@ -25,8 +25,6 @@
       }
     },
   ],
-  
-
   "inputs": [
     {
       "id": "buildType",
@@ -37,8 +35,8 @@
     {
       "id": "run",
       "description": "Run module after build:",
-      "default": "video-cap",
+      "default": "image",
       "type": "promptString"
-    },
+    }
   ]
 }
