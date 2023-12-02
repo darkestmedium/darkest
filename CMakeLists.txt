@@ -57,3 +57,5 @@ endfunction()
 add_app("cpp/camera" "camera" "main.cpp")
 add_app("cpp/image" "image" "main.cpp")
 add_app("cpp/video" "video" "main.cpp")
+
+add_app("cpp/auto-focus" "auto-focus" "main.cpp")

@@ -4,7 +4,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/img-read-display",
+      "program": "${workspaceFolder}/build/auto-focus",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

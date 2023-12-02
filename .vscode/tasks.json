@@ -35,7 +35,7 @@
     {
       "id": "run",
       "description": "Run module after build:",
-      "default": "camera",
+      "default": "auto-focus",
       "type": "promptString"
     }
   ]
