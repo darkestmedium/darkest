@@ -67,7 +67,7 @@ if __name__ == "__main__":
   # Set Callbacks
   cv2.setMouseCallback(args.winName, lmb)
 
-  while True:
+  while source.isOpened():
     has_frame, frame = source.read()
     if not has_frame:	break
     frame = cv2.flip(frame, 1)

@@ -13,21 +13,11 @@
 
 
 
+
 using namespace std;
 using namespace cv;
 
 
-
-void printHelp() {
-  cout <<
-    "image command.\n\n"
-    "Flags:\n"
-    "  --fp  --filePath (string):  Path to the file, ex. 'image.jpg'.\n"
-    "  --wn  --winName (string):  Name of the window.\n"
-    "  --v   --verbose (flag):  Toggle Verbose mode.\n"
-    "Example usage :\n"
-    "  image --filePath imgage1.jpg\n";
-};
 
 
 struct Syntax : public argparse::Args {
@@ -35,6 +25,20 @@ struct Syntax : public argparse::Args {
   std::string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
   bool &verbose         = flag("v,verbose", "Toggle verbose");
   bool &help            = flag("h,help", "Display usage");
+
+  string commandName = "camera";
+
+  void displayHelp() {
+    cout <<
+      "Command: "<<commandName<<"\n\n"
+      "Flags:\n"
+      "  --fp  --filePath (string):  Path to the file, ex. 'image.jpg'.\n"
+      "  --wn  --winName (string):  Name of the window.\n"
+      "  --v   --verbose (flag):  Toggle Verbose mode.\n\n"
+      "Example usage :\n"
+      "  "<<commandName<<" --filePath imgage1.jpg\n"
+    << endl;
+  };
 };
 
 
@@ -42,21 +46,19 @@ struct Syntax : public argparse::Args {
 int main(int argc, char* argv[]) {
   auto args = argparse::parse<Syntax>(argc, argv);
 
-  if (args.help) {printHelp(); return EXIT_FAILURE;}
-  if (args.verbose) args.print();
+  if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
+  if(args.verbose) args.print();
 
   namedWindow(args.winName, WINDOW_NORMAL);
 
   Mat image = imread(args.filePath);
-
-
-  Mat imageCopy = image.clone();
-  // Mat greyImage = rgbToGray(imageCopy);
-  // Mat hsvImage = convertBGRtoHSV(imageCopy);
-
+  if (image.empty())  {
+    cout << "Can't read file '" << args.filePath << "'\n";
+    return EXIT_FAILURE;
+  }
+  // Mat imageCopy = image.clone();
 
   imshow(args.winName, image);
   waitKey(0);
-
   return EXIT_SUCCESS;
 }
