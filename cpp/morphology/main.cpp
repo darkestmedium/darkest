@@ -98,7 +98,7 @@ int main() {
   Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3));
 
   // Video capture
-  VideoWriter writer("/home/oa/Downloads/dilation.avi", VideoWriter::fourcc('M','J','P','G'), 2, Size(10, 10));
+  VideoWriter writer("/home/oa/Downloads/dilation.mp4", VideoWriter::fourcc('M','J','P','G'), 2, Size(10, 10));
   // writer.open("/home/oa/Downloads/dilation.avi", VideoWriter::fourcc('M','J','P','G'), 2, Size(10, 10));
 
   Mat outFrame(Ila(demoImage, element, writer));

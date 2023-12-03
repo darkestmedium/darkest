@@ -2,14 +2,14 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <string>
- 
+
 // Using namespace to nullify use of cv::function(); syntax
 using namespace std;
 using namespace cv;
  
 int maxScaleUp = 100;
 int scaleFactor = 50;
- 
+
 string windowName = "Resize Image";
 string trackbarValue = "Scale";
 
@@ -20,7 +20,7 @@ void scaleImage(int, void*) {
   Mat image = imread("/home/oa/Dropbox/code/darkest/resources/images/underwater.png");
 
   // Get the Scale factor from the trackbar
-  double scaleFactorDouble = 0.5+scaleFactor*0.01;
+  double scaleFactorDouble = 0.5 + scaleFactor * 0.01;
 
   Mat scaledImage;
   // Resize the images

@@ -115,7 +115,7 @@ def get_resolution(contours, format:str="a4"):
     if mode == "landscape":
       width_mm = 297
       height_mm = 210
-    
+
 
   aspect_ratio = (width_mm / height_mm)
   if width / height > aspect_ratio: height = int(width / aspect_ratio)

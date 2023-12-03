@@ -46,8 +46,8 @@ int main() {
   // highgui function called when mouse events occur
   setMouseCallback("Window", drawRectangle);
  
-  int k=0;
   // loop until q character is pressed
+  int k=0;
   while(k!=27) {
     imshow("Window", image);
     putText(image, "Choose center, and drag, Press ESC to exit and c to clear", Point(10,30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255,255,255), 2);

@@ -4,7 +4,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/auto-focus",
+      "program": "${workspaceFolder}/build/image-alignment",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
