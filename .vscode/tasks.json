@@ -35,7 +35,7 @@
     {
       "id": "run",
       "description": "Run module after build:",
-      "default": "image-alignment",
+      "default": "chroma-keying",
       "type": "promptString"
     }
   ]

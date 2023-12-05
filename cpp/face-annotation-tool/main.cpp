@@ -2,11 +2,17 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
- 
+
+
+
+
 //Using namespace to nullify use of cv::function(); syntax
 using namespace cv;
 using namespace std;
- 
+
+
+
+
 // Points to store the bounding box coordinates
 Point top_left_corner, bottom_right_corner;
 // image image
@@ -16,15 +22,13 @@ Mat image;
 
 
 // function which will be called on mouse input
-void drawRectangle(int action, int x, int y, int flags, void *userdata)
-{
+void drawRectangle(int action, int x, int y, int flags, void *userdata) {
   // Mark the top left corner when left mouse button is pressed
-  if( action == EVENT_LBUTTONDOWN )
-  {
+  if(action == EVENT_LBUTTONDOWN) {
     top_left_corner = Point(x,y);
   }
   // When left mouse button is released, mark bottom right corner
-  else if( action == EVENT_LBUTTONUP)
+  else if(action == EVENT_LBUTTONUP)
   {
     bottom_right_corner = Point(x,y);
     // Draw rectangle
@@ -33,9 +37,9 @@ void drawRectangle(int action, int x, int y, int flags, void *userdata)
     imshow("Window", image);
     imwrite("face.png", temp(Range(topleft.y,bottomright.y),Range(topleft.x,bottomright.x)));
   }
-   
 }
- 
+
+
 // Main function
 int main() {
   image = imread("/home/oa/Dropbox/code/darkest/resources/images/underwater.png");
@@ -45,7 +49,7 @@ int main() {
   namedWindow("Window");
   // highgui function called when mouse events occur
   setMouseCallback("Window", drawRectangle);
- 
+
   // loop until q character is pressed
   int k=0;
   while(k!=27) {

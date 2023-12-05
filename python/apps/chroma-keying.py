@@ -24,11 +24,9 @@ log.setLevel(logging.DEBUG)
 
 data = {
   "image": None,
-  # "cola": [0,255,0],  # darker
-  # "colb": [0,255,0],  # brighter
   "colop": [87, 90, 88],  # darker
   "color": [106, 107, 105], # brighter
-  "softness": 0.
+  "softness": 0
 }
 
 
@@ -89,9 +87,7 @@ def syntax_creator():
 
 
 if __name__ == "__main__":
-
   args = syntax_creator()
-
   cv2.namedWindow(args.winName, cv2.WINDOW_NORMAL)
   source = cv2.VideoCapture(args.camera)
 
@@ -127,8 +123,8 @@ if __name__ == "__main__":
     if softness > 0: mask = cv2.blur(mask, (softness, softness))
 
 
-    image[mask != 0] = [0, 0, 0]
-    imgback[mask == 0] = [0, 0, 0]
+    image[mask!=0] = [0, 0, 0]
+    imgback[mask==0] = [0, 0, 0]
 
     # Defringe
     # lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
@@ -155,7 +151,6 @@ if __name__ == "__main__":
         print(f"Key pressed: {key}")
       case 27:  # esc is pressed 
         break
-
 
     cv2.imshow(args.winName, imgout)
 

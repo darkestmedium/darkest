@@ -20,6 +20,21 @@ using namespace cv;
 
 
 
+// function which will be called on mouse input
+void lmb(int action, int x, int y, int flags, void *userdata) {
+  switch (action) {
+    case EVENT_LBUTTONDOWN:
+      cout<<"LMB pressed at: "<<x<<" x "<<y<<endl;
+      break;
+    case EVENT_LBUTTONUP:
+      cout<<"LMB released at: "<<x<<" x "<<y<<endl;
+      break;
+  }
+};
+
+
+
+
 struct Syntax : public argparse::Args {
   int &width            = kwarg("w,width", "Stream width.").set_default(1280);
   int &height           = kwarg("h,height", "Stream height.").set_default(720);
@@ -53,7 +68,7 @@ int main(int argc, char* argv[]) {
   auto args = argparse::parse<Syntax>(argc, argv);
 
   if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
-  if(args.verbose) args.print();
+  if(args.verbose) {args.print();}
 
   namedWindow(args.winName, WINDOW_NORMAL);
 
@@ -65,15 +80,15 @@ int main(int argc, char* argv[]) {
   cap.set(cv::CAP_PROP_FRAME_HEIGHT, args.height);
 
 
-  // Display total number of frames in the video
-  // cout << "Total number of frames : " << int(cap.get(CAP_PROP_FRAME_COUNT)) << endl;
+  setMouseCallback(args.winName, lmb);
+
 
   // Read until video is completed
   while(cap.isOpened()) {
     Mat frame;
     cap >> frame;
     // If the frame is empty, break immediately
-    if(frame.empty()) break;
+    if(frame.empty()) {break;}
 
     switch(waitKey(args.fps)) {
       case 'c':

@@ -18,35 +18,6 @@ using namespace std;
 using namespace cv;
 
 
-// // Implement Variance of absolute values of Laplacian 
-// double var_abs_laplacian(Mat image) {
-//   ///
-//   /// YOUR CODE HERE
-//   ///
-//   if (image.channels() > 1) {cvtColor(image, image, COLOR_BGR2GRAY);}
-
-//   Mat laplacian;
-//   Laplacian(image, laplacian, CV_32F, 3, 1, 0);
-
-//   // Calculate the mean of the absolute values of the Laplacian
-//   double meanAbsLaplacian = 0.0;
-//   for (int i = 0; i < laplacian.rows; ++i) {
-//     for (int j = 0; j < laplacian.cols; ++j) {
-//       meanAbsLaplacian += abs(laplacian.at<float>(i, j));
-//     }
-//   }
-//   meanAbsLaplacian /= (laplacian.rows * laplacian.cols);
-
-//   // Calculate the variance of the absolute values of (laplacian - meanAbsLaplacian)
-//   double varAbsVals = 0.0;
-//   for (int i = 0; i < laplacian.rows; ++i) {
-//     for (int j = 0; j < laplacian.cols; ++j) {
-//       double val = laplacian.at<float>(i, j) - meanAbsLaplacian;
-//       varAbsVals += pow(val, 2);
-//     }
-//   }
-//   return varAbsVals /= (laplacian.rows * laplacian.cols);
-// }
 
 
 double var_abs_laplacian(Mat image) {
@@ -71,18 +42,6 @@ double var_abs_laplacian(Mat image) {
 
 
 double sum_modified_laplacian(Mat image) {
-  // Check if the input image is empty
-  // if (image.empty()) {
-  //   return 0.0;
-  // }
-
-  // // Convert the input image to grayscale if it's not already grayscale
-  // if (image.channels() != 1) {
-  //   Mat grayImage;
-  //   cvtColor(image, grayImage, COLOR_BGR2GRAY);
-  //   return sum_modified_laplacian(grayImage);
-  // }
-
   // Calculate the modified Laplacian
   Mat laplacian_x = Mat(image.size(), CV_32F);
   Mat laplacian_y = Mat(image.size(), CV_32F);
@@ -110,50 +69,6 @@ double sum_modified_laplacian(Mat image) {
   // Return the sum of the absolute values of the modified Laplacian
   return sum(sum_laplacian)[0];
 }
-
-
-// // Implement Sum Modified Laplacian
-// double sum_modified_laplacian(Mat image) {
-//   ///
-//   /// YOUR CODE HERE
-//   ///
-//   if (image.channels() > 1) {cvtColor(image, image, COLOR_BGR2GRAY);}
-//   // Create the kernels for the modified Laplacian filter
-//   // Define the Laplacian kernels
-//   Mat kernelX = Mat::zeros(3, 3, CV_8S);
-//   kernelX.at<int>(1, 1) = 2;
-//   kernelX.at<int>(1, 0) = -1;
-//   kernelX.at<int>(1, 2) = -1;
-
-//   Mat kernelY = Mat::zeros(3, 3, CV_8S);
-//   kernelY.at<int>(1, 1) = 2;
-//   kernelY.at<int>(0, 1) = -1;
-//   kernelY.at<int>(2, 1) = -1;
-
-//   // Apply the modified Laplacian filter to the image
-//   Mat laplacianX;
-//   filter2D(image, laplacianX, CV_32F, kernelX, Point(-1, -1), 0, BORDER_DEFAULT);
-//   Mat laplacianY;
-//   filter2D(image, laplacianY, CV_32F, kernelY, Point(-1, -1), 0, BORDER_DEFAULT);
-
-//   // Calculate the absolute value of the filtered images
-
-//   // Calculate the modified Laplacian
-//   Mat modifiedLaplacian(abs(laplacianX) + abs(laplacianY));
-
-
-//   // Calculate the sum of the modified Laplacian
-//   double sumModifiedLaplacian = 0.0;
-//   for (int i = 0; i < modifiedLaplacian.rows; ++i) {
-//     for (int j = 0; j < modifiedLaplacian.cols; ++j) {
-//       double val = modifiedLaplacian.at<float>(i, j);
-//       sumModifiedLaplacian += val;
-//     }
-//   }
-//   return sumModifiedLaplacian;
-// };
-
-
 
 
 

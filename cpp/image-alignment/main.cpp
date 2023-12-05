@@ -146,6 +146,7 @@ int main(int argc, char* argv[]) {
 
 
 
+
   // Extract location of good matches Blue / Green
   ///
   /// YOUR CODE HERE
@@ -162,6 +163,8 @@ int main(int argc, char* argv[]) {
   /// YOUR CODE HERE
   ///
   Mat hBlueGreen = findHomography(src_ptsBG, dst_ptsBG, RANSAC, 5.0);
+
+
 
 
   // Extract location of good matches Red / Green
@@ -181,51 +184,21 @@ int main(int argc, char* argv[]) {
   Mat hRedGreen = findHomography(src_ptsRG, dst_ptsRG, RANSAC, 5.0);
 
 
+
+
   // Use homography to find blueWarped and RedWarped images
   ///
   /// YOUR CODE HERE
   ///
-  // Mat blueWarped(blue.clone());
-  // Mat redWarped(red.clone());
-
-
-  // hBlueGreen = Mat::eye(3, 3, CV_32F);
-  // hRedGreen = Mat::eye(3, 3, CV_32F);
-
   Mat blueWarped, redWarped;
-
-  // blueWarped.convertTo(blueWarped, CV_64F);
-  // redWarped.convertTo(redWarped, CV_64F);
-  // hRedGreen.convertTo(hRedGreen, CV_64F);
-  // hBlueGreen.convertTo(hBlueGreen, CV_64F);
-  // blue.convertTo(blue, CV_64F);
-  // red.convertTo(red, CV_64F);
-
-  // cvtColor(blue, blue, COLOR_GRAY2BGR);
-  // cvtColor(blueWarped, blueWarped, COLOR_GRAY2BGR);
-  // cvtColor(hBlueGreen, hBlueGreen, COLOR_GRAY2BGR);
-  // cvtColor(red, red, COLOR_GRAY2BGR);
-  // cvtColor(redWarped, redWarped, COLOR_GRAY2BGR);
-  // cvtColor(hRedGreen, hRedGreen, COLOR_GRAY2BGR);
-
-  // cout << blue.type() << endl;
-  // cout << blueWarped.type() << endl;
-  // cout << hRedGreen.type() << endl;
-  // cout << red.type() << endl;
-  // cout << redWarped.type() << endl;
-  // cout << hBlueGreen.type() << endl;
-
-
   warpPerspective(blue, blueWarped, hBlueGreen, Size(width, height));
   warpPerspective(red, redWarped, hRedGreen, Size(width, height));
-
 
   Mat colorImage;
   vector<Mat> colorImageChannels{blueWarped, green, redWarped};
   merge(colorImageChannels, colorImage);
 
   imshow(args.winName, colorImage);
-
   waitKey(0);
 
   return EXIT_SUCCESS;

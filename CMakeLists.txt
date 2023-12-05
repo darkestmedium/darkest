@@ -17,7 +17,6 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
 # Find packages
 find_package(OpenCV REQUIRED)
 
-
 # Add subdirectories recursively
 add_subdirectory(cpp/api)
 
@@ -46,20 +45,16 @@ endfunction()
 # include_directories(${OpenCV_INCLUDE_DIRS})
 
 
-## Tutorials
-# add_app("cpp/videocapture" "videocapture" "main.cpp")
-# add_app("cpp/qrcode" "qrcode" "main.cpp")
-# add_app("cpp/face-annotation-tool" "face-annotation-tool" "main.cpp")
-# add_app("cpp/slider-resize" "slider-resize" "main.cpp")
-# add_app("cpp/morphology" "morphology" "main.cpp")
-# add_app("cpp/img-read" "img-read" "main.cpp")
-# add_app("cpp/submission" "submission" "main.cpp")
-
+# Templates
 # add_app("cpp/camera" "camera" "main.cpp")
 # add_app("cpp/image" "image" "main.cpp")
 # add_app("cpp/video" "video" "main.cpp")
 
+# OpenCV University
 # add_app("cpp/auto-focus" "auto-focus" "main.cpp")
 # add_app("cpp/panorama-stiching" "panorama-stiching" "main.cpp")
 # add_app("cpp/morphology" "morphology" "main.cpp")
-add_app("cpp/image-alignment" "image-alignment" "main.cpp")
+# add_app("cpp/image-alignment" "image-alignment" "main.cpp")
+# add_app("cpp/document-scanner" "document-scanner" "main.cpp")
+# add_app("cpp/ig-filters" "ig-filters" "main.cpp")
+add_app("cpp/chroma-keying" "chroma-keying" "main.cpp")

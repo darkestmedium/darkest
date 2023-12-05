@@ -115,7 +115,13 @@ scaling = {
 class DBox():
 
   # Constructors
-  def __init__(self, left:int, top:int, right:int, bottom:int) -> None:
+  def __init__(self, left:int, top:int, right:int, bottom:int, width:int, height:int) -> None:
+    # Get screen space coords
+    left = int(left*width)
+    top = int(top*height)
+    right = int(right*width)
+    bottom = int(bottom*height)
+
     self.lefttop = (left, top)
     self.righttop = (right, top)
     self.rightbottom = (right, bottom)
@@ -123,12 +129,15 @@ class DBox():
 
     self.left = (left, (top+bottom)//2)
     self.top = ((left+right)//2, top)
-    self.right = (right, (top+bottom)/2)
+    self.right = (right, (top+bottom)//2)
     self.bottom = ((left+right)//2, bottom)
 
     self.center = ((left+right)//2, (top+bottom)//2)
 
     self.points_to_array()
+
+    # Legacy compability with uidraw
+    self.pts = [left, top, right, bottom]
 
 
   def points_to_array(self):
@@ -317,6 +326,7 @@ class DrawOCVUi():
 
   @classmethod
   def get_bbox_ss(cls, bbox:tuple):
+  # def get_bbox_ss(cls, left:int, top:int, right:int, bottom:int):
     """Returns the bbox points in screen space - unnormalized.
 
     left = int(bbox[0] * cls.imwidth)
@@ -492,7 +502,7 @@ class DrawOCVUi():
 
 
   @classmethod
-  def text(cls, text:str="label", pxy:tuple=None, alignh:str="center", alignv:str="above", weight:str="light",
+  def text(cls, text:str="label", pxy:tuple=None, alignh:str="left", alignv:str="above", weight:str="light",
     fonth:float=None, fontc=None, padding:int=8, bboxc=None, bboxo:int=255, draw_bbox:bool=True
   ):
     """Draws a text label.

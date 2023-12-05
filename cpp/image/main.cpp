@@ -20,6 +20,21 @@ using namespace cv;
 
 
 
+void lmb(int action, int x, int y, int flags, void *userdata) {
+  // Mark the top left corner when left mouse button is pressed
+  switch (action) {
+    case EVENT_LBUTTONDOWN:
+      cout<<"LMB pressed at: "<<x<<" x "<<y<<endl;
+      break;
+    case EVENT_LBUTTONUP:
+      cout<<"LMB released at: "<<x<<" x "<<y<<endl;
+      break;
+  }
+}
+
+
+
+
 struct Syntax : public argparse::Args {
   std::string &filePath = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/images/blemish.png");
   std::string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
@@ -43,13 +58,16 @@ struct Syntax : public argparse::Args {
 
 
 
+
 int main(int argc, char* argv[]) {
   auto args = argparse::parse<Syntax>(argc, argv);
 
   if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
-  if(args.verbose) args.print();
+  if(args.verbose) {args.print();}
 
   namedWindow(args.winName, WINDOW_NORMAL);
+
+  setMouseCallback(args.winName, lmb);
 
   Mat image = imread(args.filePath);
   if (image.empty())  {

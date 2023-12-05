@@ -627,8 +627,6 @@ if __name__ == "__main__":
 
   cv2.setMouseCallback(winname, remove_blemish)
 
-
-  key = 0
   while True:  
     key = cv2.waitKey(1)
     match key:
@@ -637,10 +635,7 @@ if __name__ == "__main__":
         uidraw.image(image)
         uidraw.text("Press 'esc' to quit, 'c' to reset the image", postxt, alignh="center", alignv="center", fonth=uidraw.body, padding=6, bboxo=192)
         cv2.imshow(winname, uidraw.combine())
-
       case 27:  # esc is pressed 
         break
-      # case _: # esc is pressed 
-      #   print(f"Key pressed: {key}")
 
   cv2.destroyAllWindows()

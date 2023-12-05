@@ -18,16 +18,35 @@ using namespace std;
 using namespace cv;
 
 
+struct UserData {
+  Mat image;
+  Vec<unsigned char,3> colop;
+  Vec<unsigned char,3> color;
+  int softness;
+
+  // Constructors
+  UserData(Mat image)
+    : image(image)
+  {};
+  UserData() {};
+  // Destructors
+  ~UserData() {};
+};
+
 
 
 void lmb(int action, int x, int y, int flags, void *userdata) {
   // Mark the top left corner when left mouse button is pressed
+  UserData* data = static_cast<UserData*>(userdata);
+
   switch (action) {
     case EVENT_LBUTTONDOWN:
-      cout<<"LMB pressed at: "<<x<<" x "<<y<<endl;
+      data->colop = data->image.at<cv::Vec3b>(y, x);
+      cout<<"Color sampled on press: "<<data->colop<<endl;
       break;
     case EVENT_LBUTTONUP:
-      cout<<"LMB released at: "<<x<<" x "<<y<<endl;
+      cout<<"Color sampled on release: "<<data->color<<endl;
+      data->color = data->image.at<cv::Vec3b>(y, x);
       break;
   }
 }
@@ -35,14 +54,21 @@ void lmb(int action, int x, int y, int flags, void *userdata) {
 
 
 
+
+
+
+
 struct Syntax : public argparse::Args {
-  std::string &filePath = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/video/focus-test.mp4");
-  int &fps              = kwarg("fps,framerate", "Playback framerate in ms - 30fps / 33.33ms.").set_default(33);
+  int &width            = kwarg("w,width", "Stream width.").set_default(1280);
+  int &height           = kwarg("h,height", "Stream height.").set_default(720);
+  int &fps              = kwarg("fps,framerate", "Framerate.").set_default(30);
+  int &camera           = kwarg("cam,camera", "Camera input - default is 0.").set_default(0);
+  int &mirror           = kwarg("mir,mirror", "Mirror the camera input.").set_default(1);
   std::string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
   bool &verbose         = flag("v,verbose", "Toggle verbose");
   bool &help            = flag("h,help", "Display usage");
 
-  string commandName = "video";
+  string commandName = "chroma-keying";
 
   void displayHelp() {
     cout <<
@@ -65,16 +91,22 @@ int main(int argc, char* argv[]) {
   auto args = argparse::parse<Syntax>(argc, argv);
 
   if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
-  if(args.verbose) args.print();
+  if(args.verbose) {args.print();}
 
   namedWindow(args.winName, WINDOW_NORMAL);
 
+  VideoCapture cap(args.camera);
+  if(!cap.isOpened()) {cout << "Error opening video stream or file: " << args.camera << endl;}
+  cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+  cap.set(cv::CAP_PROP_FRAME_WIDTH, args.width);
+  cap.set(cv::CAP_PROP_FRAME_HEIGHT, args.height);
 
-  VideoCapture cap(args.filePath);
-  if(!cap.isOpened()) {cout << "Error opening video stream or file: " << args.filePath << endl;}
 
+  UserData data;
 
-  setMouseCallback(args.winName, lmb);
+  // highgui function called when mouse events occur
+  setMouseCallback(args.winName, lmb, &data);
+
 
 
   // Read until video is completed
@@ -84,11 +116,13 @@ int main(int argc, char* argv[]) {
     // If the frame is empty, break immediately
     if(frame.empty()) break;
 
+    data.image = frame;
+
     switch(waitKey(args.fps)) {
       case 'c':
         cout << "Key pressed: 'c'" << endl;
         break;
-      case 27:
+      case 27: // esc is pressed
         cout << "Key pressed: 'esc'. Stopping the video" << endl;
         return EXIT_FAILURE;
     }

@@ -42,7 +42,7 @@ def syntax_creator():
   """Creates the command's syntax object and returns it.
   """
   parser = argparse.ArgumentParser()
-  parser.add_argument("-fp", "--filePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/images/that-space.png", help="Path to the file.")
+  parser.add_argument("-fp", "--filePath", type=str, default=f"/home/{os.getlogin()}/Downloads/Quiz5_1.jpg", help="Path to the file.")
   parser.add_argument("-wn", "--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
   return parser.parse_args()
 
@@ -58,8 +58,10 @@ if __name__ == "__main__":
 
   # Set Callbacks
   cv2.setMouseCallback(args.winName, lmb)
+  image = cv2.imread(args.filePath, cv2.IMREAD_COLOR)
 
-  image = cv2.imread(args.filePath)
+  contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+  print('Number of contours : ', len(contours))
 
   # key = cv2.waitKey(1)
   # match key:
@@ -67,8 +69,8 @@ if __name__ == "__main__":
   #     log.debug(f"Key pressed: {key}")
   #   case 27:  # esc is pressed 
   #     break
-    # case _: # esc is pressed 
-    #   log.debug(f"Key pressed: {key}")
+  #   case _: # esc is pressed 
+  #   log.debug(f"Key pressed: {key}")
   
   cv2.imshow(args.winName, image)
   cv2.waitKey(0)
