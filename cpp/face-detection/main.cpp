@@ -81,16 +81,13 @@ int main(int argc, char* argv[]) {
   if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
   if(args.verbose) {args.print();}
 
-
   StyleLight style;
   dnn::Net net = dnn::readNetFromCaffe(args.filePath, args.filePathDNN );
 
-  int conf_treshold(75);
-
-  std::string winname = "Camera Preview";
-  namedWindow(winname, WINDOW_NORMAL);
+  namedWindow(args.winName, WINDOW_NORMAL);
   Mat frame;
 
+  int conf_treshold(75);
 
   //--- INITIALIZE VIDEOCAPTURE
   VideoCapture camera(args.camera);
@@ -156,27 +153,25 @@ int main(int argc, char* argv[]) {
 
 
     for (size_t idx = 0; idx < boxes.size(); ++idx) {
-      Rect box = boxes[idx];
       DetectionBox dbox(boxes[idx].x, boxes[idx].y, boxes[idx].x+boxes[idx].width, boxes[idx].y+boxes[idx].height);
 
       uidraw.dbox_outline(dbox, style.cola, 127);
 
-
       uidraw.text("person", dbox.lefttop, style.cola);
       // uidraw.dbox_frame(dbox, style.cola, 0.1, 128);
+      
 
 
-      // ft2r->putText(frame, "left", dbox.left, 18, style.cola, -1, LINE_AA, true);
+      // uidraw.ft2r->putText(uidraw.imcv, "left", dbox.left, 24, style.cola, -1, LINE_AA, true);
       // ft2r->putText(frame, "top", dbox.top, 18, style.cola, -1, LINE_AA, true);
       // ft2r->putText(frame, "right", dbox.right, 18, style.cola, -1, LINE_AA, true);
-
     }
 
-    uidraw.text(
-      format("Inference time: %.2f ms", get_inference_time(net, "ms")),
-      Point(50, 50), style.cola, 18, 8, 128, false
-    );
-  
+    // uidraw.text(
+    //   format("Inference time: %.2f ms", get_inference_time(net, "ms")),
+    //   Point(50, 50), style.cola, 18, 8, 128, false
+    // );
+
 
     switch(waitKey(args.fps)) {
       case 'c':
@@ -187,8 +182,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     // Show live and wait for a key with timeout long enough to show images
-    imshow(winname, uidraw.combine());
-    // imshow(winname, frame);
+    imshow(args.winName, uidraw.combine());
   };
 
   // the camera will be deinitialized automatically in VideoCapture destructor

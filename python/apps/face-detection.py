@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # Set the base frame for the detection drawer
     uidraw.image(frame)
-  
+
     # Run a model
     net.setInput(cv2.dnn.blobFromImage(frame, 1.0, (256, 256), [104, 117, 123], swapRB=False, crop=False))
 

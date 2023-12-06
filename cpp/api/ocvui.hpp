@@ -213,13 +213,15 @@ public:
   }
 
 
-  void text(string text, Point pos, Scalar rgb, int fonth=18, int padding=8, int opacity=255, bool draw_bbox=true) {
+  void text(string text, Point pos, Scalar rgb, int fonth=18, int padding=8, int opacity=127, bool draw_bbox=true) {
     Scalar color(rgb[0], rgb[1], rgb[2], opacity);
+    
     Size txtwh = get_text_size(text, fonth, padding);
     if (draw_bbox == true) {
       rectangle(imsh, pos, Point(pos.x+txtwh.width, pos.y+txtwh.height), color, -1);
     }
-    ft2r->putText(imtxt, text, pos, fonth, style.cold, -1, LINE_AA, false);
+    Scalar coltxt(style.cold[0], style.cold[1], style.cold[2], opacity);
+    ft2r->putText(imtxt, text, pos, fonth, coltxt, -1, LINE_AA, false);
   };
 
 
@@ -246,20 +248,35 @@ public:
     imout.convertTo(imout, CV_32FC3);
 
     Mat imsh_mask;
-    inRange(imsh, Scalar(0,0,0,1), Scalar(255,255,255,255), imsh_mask);
+    extractChannel(imsh, imsh_mask, 3);
+    imsh_mask /= 255.f;
+    Mat imtxt_mask;
 
+    extractChannel(imtxt, imtxt_mask, 3);
+    imtxt_mask /= 255.f;
+
+    // Blend composites
     for(int y=0; y<imcv.size().height; y++) {
       for(int x=0; x<imcv.size().width; x++) {
         for(int c=0; c<imcv.channels(); c++) {
           imout.at<Vec3f>(y,x)[c] = (
-            (imcv.at<Vec3f>(y,x)[c] * (1.0-imsh.at<Vec4f>(y,x)[3]))
-            +(imsh.at<Vec4f>(y,x)[c] * imsh.at<Vec4f>(y,x)[3]) * (1.0-imtxt.at<Vec4f>(y,x)[3])
-            +(imtxt.at<Vec4f>(y,x)[c] * imtxt.at<Vec4f>(y,x)[3])
+            (imcv.at<Vec3f>(y,x)[c] * (1.0-imsh_mask.at<float>(y,x)))
+            +(imsh.at<Vec4f>(y,x)[c] * imsh_mask.at<float>(y,x)) * (1.0-imtxt_mask.at<float>(y,x))
+            +(imtxt.at<Vec4f>(y,x)[c] * imtxt_mask.at<float>(y,x))
           );
         }
       }
     }
-    
+
+    // for(int y=0; y<imcv.size().height; y++) {
+    //   for(int x=0; x<imcv.size().width; x++) {
+    //     for(int c=0; c<imcv.channels(); c++) {
+    //       imout.at<Vec3f>(y,x)[c] = (imsh.at<Vec4f>(y,x)[3]);
+    //     }
+    //   }
+    // }
+
+  
     imout.convertTo(imout, CV_8UC3);
     return imout;
   }
