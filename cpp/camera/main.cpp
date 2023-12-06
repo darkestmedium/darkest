@@ -20,7 +20,6 @@ using namespace cv;
 
 
 
-// function which will be called on mouse input
 void lmb(int action, int x, int y, int flags, void *userdata) {
   switch (action) {
     case EVENT_LBUTTONDOWN:
@@ -36,12 +35,13 @@ void lmb(int action, int x, int y, int flags, void *userdata) {
 
 
 struct Syntax : public argparse::Args {
+  string &filePath      = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/video/that-space.png");
   int &width            = kwarg("w,width", "Stream width.").set_default(1280);
   int &height           = kwarg("h,height", "Stream height.").set_default(720);
   int &fps              = kwarg("fps,framerate", "Framerate.").set_default(30);
   int &camera           = kwarg("cam,camera", "Camera input - default is 0.").set_default(0);
   int &mirror           = kwarg("mir,mirror", "Mirror the camera input.").set_default(1);
-  std::string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
+  string &winName       = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
   bool &verbose         = flag("v,verbose", "Toggle verbose");
   bool &help            = flag("h,help", "Display usage");
 

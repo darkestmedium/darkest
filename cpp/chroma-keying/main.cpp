@@ -18,53 +18,87 @@ using namespace std;
 using namespace cv;
 
 
+
+
 struct UserData {
   Mat image;
-  Vec<unsigned char,3> colop;
-  Vec<unsigned char,3> color;
+  Vec<uint,3> colop;
+  Vec<uint,3> color;
   int softness;
 
   // Constructors
   UserData(Mat image)
     : image(image)
+    , colop(68, 255, 0)
+    , color(17, 255, 0)
+    , softness(0)
   {};
-  UserData() {};
+  UserData()
+    : colop(68, 255, 0)
+    , color(17, 255, 0)
+    , softness(0)
+  {};
   // Destructors
   ~UserData() {};
 };
 
 
 
-void lmb(int action, int x, int y, int flags, void *userdata) {
-  // Mark the top left corner when left mouse button is pressed
-  UserData* data = static_cast<UserData*>(userdata);
 
-  switch (action) {
-    case EVENT_LBUTTONDOWN:
-      data->colop = data->image.at<cv::Vec3b>(y, x);
-      cout<<"Color sampled on press: "<<data->colop<<endl;
-      break;
-    case EVENT_LBUTTONUP:
-      cout<<"Color sampled on release: "<<data->color<<endl;
-      data->color = data->image.at<cv::Vec3b>(y, x);
-      break;
-  }
+template <typename T>
+inline float get_luminance(Vec<T,3> &color) {
+  /* Calculates the color luminance.
+  */
+  return color[0] * 0.114 + color[1] * 0.587 + color[2] * 0.299;
 }
 
 
 
 
+void lmb(int action, int x, int y, int flags, void *userdata) {
+  /* Mouse callback function.
+  */
+  UserData* data = static_cast<UserData*>(userdata);
 
+  switch (action) {
+    case EVENT_LBUTTONDOWN:
+      data->colop = data->image.at<Vec3b>(y, x);
+      cout<<"Color sampeled on press: "<<data->colop<<endl;
+      break;
+    case EVENT_LBUTTONUP:
+      data->color = data->image.at<Vec3b>(y, x);
+      cout<<"Color sampled on release: "<<data->color<<endl;
+      break;
+  }
+
+  // Sort colors based on luminance
+  float lumiop = get_luminance(data->colop);
+  float lumior = get_luminance(data->color);
+  if (lumiop > lumior) {
+    data->colop = data->color;
+    data->color = data->colop;
+  }
+}
+
+
+
+void softness(int trkbVal, void *userdata) {
+  UserData* data = static_cast<UserData*>(userdata);
+  data->softness = trkbVal;
+}
 
 
 
 struct Syntax : public argparse::Args {
+  /* Syntax struct with args and help printing for the command.
+  */
+  string &filePath      = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/images/that-space.png");
   int &width            = kwarg("w,width", "Stream width.").set_default(1280);
   int &height           = kwarg("h,height", "Stream height.").set_default(720);
   int &fps              = kwarg("fps,framerate", "Framerate.").set_default(30);
   int &camera           = kwarg("cam,camera", "Camera input - default is 0.").set_default(0);
   int &mirror           = kwarg("mir,mirror", "Mirror the camera input.").set_default(1);
-  std::string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
+  string &winName       = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
   bool &verbose         = flag("v,verbose", "Toggle verbose");
   bool &help            = flag("h,help", "Display usage");
 
@@ -103,20 +137,31 @@ int main(int argc, char* argv[]) {
 
 
   UserData data;
-
-  // highgui function called when mouse events occur
   setMouseCallback(args.winName, lmb, &data);
+  createTrackbar("Softness", args.winName, 0, 100, softness, &data);
 
-
+  
 
   // Read until video is completed
   while(cap.isOpened()) {
-    Mat frame;
-    cap >> frame;
-    // If the frame is empty, break immediately
-    if(frame.empty()) break;
+    Mat image;
+    cap >> image;
+    if(image.empty()) break;
 
-    data.image = frame;
+    Mat imgback = imread(args.filePath);
+    resize(imgback, imgback, Size(args.width, args.height));
+
+    data.image = image;
+    Mat mask;
+    inRange(image, data.colop, data.color, mask);
+
+    if (data.softness > 0) {cv::blur(mask, mask, cv::Size(data.softness, data.softness));}
+
+    image.setTo(Scalar(0, 0, 0), mask != 0);
+    imgback.setTo(Scalar(0, 0, 0), mask == 0);
+
+
+    Mat imgout = imgback + image;
 
     switch(waitKey(args.fps)) {
       case 'c':
@@ -126,7 +171,7 @@ int main(int argc, char* argv[]) {
         cout << "Key pressed: 'esc'. Stopping the video" << endl;
         return EXIT_FAILURE;
     }
-    imshow(args.winName, frame);
+    imshow(args.winName, imgout);
   }
 
   return EXIT_SUCCESS;

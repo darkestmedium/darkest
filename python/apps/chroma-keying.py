@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 log = logging.getLogger("chroma-keying")
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.setLevel(logging.DEBUG)
-# log.setLevel(logging.INFO)
 
 
 
@@ -110,7 +109,6 @@ if __name__ == "__main__":
 
     imgback = cv2.imread(args.imagePath)
     imgback = cv2.resize(imgback, (args.width, args.height))  # resize
-    # crop_background = imgback[0:args.height, 0:args.width]  # crop
 
     mask = cv2.inRange(
       image, 
@@ -121,7 +119,6 @@ if __name__ == "__main__":
     # "It works on my machine"
     softness = data["softness"]
     if softness > 0: mask = cv2.blur(mask, (softness, softness))
-
 
     image[mask!=0] = [0, 0, 0]
     imgback[mask==0] = [0, 0, 0]

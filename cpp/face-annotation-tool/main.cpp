@@ -28,8 +28,7 @@ void drawRectangle(int action, int x, int y, int flags, void *userdata) {
     top_left_corner = Point(x,y);
   }
   // When left mouse button is released, mark bottom right corner
-  else if(action == EVENT_LBUTTONUP)
-  {
+  else if(action == EVENT_LBUTTONUP) {
     bottom_right_corner = Point(x,y);
     // Draw rectangle
     rectangle(image, top_left_corner, bottom_right_corner, Scalar(0,255,0), 2, 8 );
@@ -57,8 +56,7 @@ int main() {
     putText(image, "Choose center, and drag, Press ESC to exit and c to clear", Point(10,30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255,255,255), 2);
     k= waitKey(0);
     // If c is pressed, clear the window, using the dummy image
-    if(k == 99)
-    {
+    if(k == 99) {
       temp.copyTo(image);
     }
   }

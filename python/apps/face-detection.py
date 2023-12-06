@@ -76,8 +76,6 @@ if __name__ == "__main__":
         uidraw.get_bbox_ss((detections[0, 0, indx, 3], detections[0, 0, indx, 4], detections[0, 0, indx, 5], detections[0, 0, indx, 6]))
 
         uidraw.bbox_outline(dbox.dbox, opacity=opacity)
-        # uidraw.bbox_corners(dbox.dbox, opacity=opacity)
-        # uidraw.bbox_frame(opacity=opacity)
 
         # New dbox class
         uidraw.text(f"person: {confidence:.2f}", dbox.lefttop, alignh="left", alignv="above", bboxo=opacity)
