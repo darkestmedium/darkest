@@ -81,12 +81,10 @@ int main(int argc, char* argv[]) {
   if(args.help) {args.displayHelp(); return EXIT_FAILURE;}
   if(args.verbose) {args.print();}
 
-  StyleLight style;
   dnn::Net net = dnn::readNetFromCaffe(args.filePath, args.filePathDNN );
 
   namedWindow(args.winName, WINDOW_NORMAL);
   Mat frame;
-
   int conf_treshold(75);
 
   //--- INITIALIZE VIDEOCAPTURE
@@ -94,9 +92,7 @@ int main(int argc, char* argv[]) {
   if(!camera.isOpened()) {cout << "Error opening video stream or file: " << args.camera << endl;}
   io::setup_video_capture(camera);
 
-
-  Draw uidraw(net);
-
+  Draw uidraw(net, "dark");
 
   //--- GRAB AND WRITE LOOP
   std::cout << "Start grabbing" << std::endl << "Press any key to terminate" << std::endl;
@@ -104,8 +100,8 @@ int main(int argc, char* argv[]) {
     camera.read(frame);
     if (frame.empty()) {break;}
     flip(frame, frame, args.mirror);
-
     uidraw.set_image(frame);
+
     net.setInput(dnn::blobFromImage(frame, 1.0, Size(256, 256), Scalar(104, 117, 123), false, false));
 
     // Run the forward pass
@@ -154,34 +150,44 @@ int main(int argc, char* argv[]) {
 
     for (size_t idx = 0; idx < boxes.size(); ++idx) {
       DetectionBox dbox(boxes[idx].x, boxes[idx].y, boxes[idx].x+boxes[idx].width, boxes[idx].y+boxes[idx].height);
+      uidraw.outline(dbox);
+      uidraw.frame(dbox);
 
-      uidraw.dbox_outline(dbox, style.cola, 127);
 
-      uidraw.text("person", dbox.lefttop, style.cola);
-      // uidraw.dbox_frame(dbox, style.cola, 0.1, 128);
-      
+      uidraw.text("left top", dbox.lefttop, uidraw.heading, 4, "right", "below", 127, 255, true);
+      uidraw.text("right top", dbox.righttop, uidraw.heading, 4, "left", "below", 127, 255, true);
+      uidraw.text("right bottom", dbox.rightbottom, uidraw.heading, 4, "left", "above", 127, 255, true);
+      uidraw.text("left bottom", dbox.leftbottom, uidraw.heading, 4, "right", "above", 127, 255, true);
 
+      uidraw.text("left", dbox.left, uidraw.heading, 4, "right", "above", 127, 255, true);
+      uidraw.text("right", dbox.right, uidraw.heading, 4, "left", "below", 127, 255, true);
+    
+      uidraw.text("top", dbox.top, uidraw.heading, 4, "center", "above", 127, 255, true);
+      uidraw.text("bottom", dbox.bottom, uidraw.heading, 4, "center", "below", 127, 255, true);
+
+      uidraw.text("center", dbox.center, uidraw.heading, 4, "center", "center", 127, 255, true);
+
+
+      drawMarker(uidraw.shapes, dbox.center, Scalar(uidraw.style.cola[0], uidraw.style.cola[1], uidraw.style.cola[2], 127), MARKER_CROSS, uidraw.heading, uidraw.thicka, LINE_AA);
 
       // uidraw.ft2r->putText(uidraw.imcv, "left", dbox.left, 24, style.cola, -1, LINE_AA, true);
       // ft2r->putText(frame, "top", dbox.top, 18, style.cola, -1, LINE_AA, true);
       // ft2r->putText(frame, "right", dbox.right, 18, style.cola, -1, LINE_AA, true);
     }
-
+    // string inference = format("Inference time: %.2f ms", get_inference_time(net, "ms"));
     // uidraw.text(
-    //   format("Inference time: %.2f ms", get_inference_time(net, "ms")),
-    //   Point(50, 50), style.cola, 18, 8, 128, false
+    //   inference,
+
+    //   Point(50, 50), 18, 8, 128, false
     // );
-
-
     switch(waitKey(args.fps)) {
       case 'c':
-        cout << "Key pressed: 'c'" << endl;
+        cout<<"Key pressed: 'c'"<<endl;
         break;
       case 27: // esc is pressed
-        cout << "Key pressed: 'esc'. Stopping the video" << endl;
+        cout<<"Key pressed: 'esc'. Stopping the video"<<endl;
         return EXIT_FAILURE;
     }
-    // Show live and wait for a key with timeout long enough to show images
     imshow(args.winName, uidraw.combine());
   };
 

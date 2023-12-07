@@ -13,6 +13,7 @@
 
 
 
+
 using namespace std;
 using namespace cv;
 
@@ -21,14 +22,9 @@ using namespace cv;
 
 struct DetectionBox {
   /* Detection box struct. Holds and calculates all the grid points.
-
-  x, y, width, height;
-  left, top, right, bottom
-  pair<int, int> center = getCenter(bbox);
-
   */
   Point lefttop, righttop, rightbottom, leftbottom, left, top, right, bottom, center;
-  vector<Point> points;
+  array<Point,9> points;
 
   // Constructors
   DetectionBox(int left, int top, int right, int bottom)
@@ -41,7 +37,7 @@ struct DetectionBox {
     , right(right, (top+bottom)/2)
     , bottom((left+right)/2, bottom)
     , center((left+right)/2, (top+bottom)/2)
-  {};
+  {points_to_array();}
   // Destructors
   ~DetectionBox() {};
 
@@ -59,29 +55,12 @@ struct DetectionBox {
 };
 
 
-struct ScalingOCVUi {
-  int thicka = 1;
-  int thickb = 2;
-  int thickc = 4;
-};
 
 
-struct StyleOCVUi {
-  Scalar cola;
-  Scalar colb;
-  Scalar colc;
-  Scalar cold;
-  string fontr;
-  string fontb;
-  string fontl;
-};
-
-
-struct StyleLight : StyleOCVUi {
-  // Constructor
+struct StyleLight {
+  // Constructors
   StyleLight()
-    : StyleOCVUi()
-    , cola{255, 255, 255}  // almost white
+    : cola{255, 255, 255}  // almost white
     , colb{225, 225, 225}  // light grey
     , colc{35, 35, 35}     // dark grey
     , cold{0, 0, 0}        // black
@@ -92,17 +71,37 @@ struct StyleLight : StyleOCVUi {
   // Destructors
   ~StyleLight() {};
 
-  // Color
-  Scalar cola;  // almost white;
-  Scalar colb;  // light grey;
-  Scalar colc;  // dark grey;
-  Scalar cold;  // black;
-
-  // Fonts
-  string fontl;
+  Scalar cola;
+  Scalar colb;
+  Scalar colc;
+  Scalar cold;
   string fontr;
   string fontb;
+  string fontl;
+};
 
+
+struct StyleDark {
+  // Constructors
+  StyleDark()
+    : cold{0, 0, 0}        // black
+    , colc{39, 39, 39}     // dark grey
+    , colb{225, 225, 225}  // light grey
+    , cola{245, 245, 245}  // almost white
+    , fontl("/home/ccpcpp/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Light.ttf")
+    , fontr("/home/ccpcpp/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Regular.ttf")
+    , fontb("/home/ccpcpp/Dropbox/code/darkest/resources/fonts/intel/IntelOneMono-Bold.ttf")
+  {};
+  // Destructors
+  ~StyleDark() {};
+
+  Scalar cola;
+  Scalar colb;
+  Scalar colc;
+  Scalar cold;
+  string fontr;
+  string fontb;
+  string fontl;
 };
 
 
@@ -116,24 +115,26 @@ class Draw {
 
     */
 public:
-
   // Constructors
-  Draw(Mat img, dnn::Net dnn)
-    : imcv(img)
+  Draw(Mat image, dnn::Net dnn, string color="light")
+    : base(image)
     , dnn(dnn)
-  {
+  { 
+    set_style(color);
     ft2l->loadFontData(style.fontl, 0);
     ft2r->loadFontData(style.fontr, 0);
     ft2b->loadFontData(style.fontb, 0);
   };
-  Draw(dnn::Net dnn)
+  Draw(dnn::Net dnn, string color="light")
     : dnn(dnn)
   {
+    set_style(color);
     ft2l->loadFontData(style.fontl, 0);
     ft2r->loadFontData(style.fontr, 0);
     ft2b->loadFontData(style.fontb, 0);
   };
-  Draw() {
+  Draw(string color="light") {
+    set_style(color);
     ft2l->loadFontData(style.fontl, 0);
     ft2r->loadFontData(style.fontr, 0);
     ft2b->loadFontData(style.fontb, 0);
@@ -141,17 +142,20 @@ public:
   // Destructors
   ~Draw() {delete ft2l, ft2r, ft2b;}
 
-  // Image Layers -> input image, shapes, text, combined out image
-  Mat imcv;
-  Mat imsh;
-  Mat imtxt;
-  Mat imout;
+  // Image Layers -> base, shapes, typo, composite 
+  Mat base;
+  Mat shapes;
+  Mat typo;
+  Mat composite;
 
-  Size imsize;
+  Size frame_size;
 
   int thicka = 2;
   int thickb = thicka*2;
   int thickc = thicka*4;
+
+  int heading=16;
+  int body=12;
 
   dnn::Net dnn;
   StyleLight style;
@@ -162,66 +166,105 @@ public:
   Ptr<freetype::FreeType2> ft2b = freetype::createFreeType2();
 
 
-  void set_image(Mat &img) {
-    imcv = img;
-    imsize = img.size();
-    imsh = Mat(imcv.size(), CV_8UC4, Scalar(255, 255, 255, 0));
-    imtxt = Mat(imcv.size(), CV_8UC4, Scalar(255, 255, 255, 0));
-    imout = Mat(imcv.size(), CV_8UC3, Scalar(255, 0, 0));
+  void set_image(Mat &image) {
+    base = image;
+    shapes = Mat(base.size(), CV_8UC4, Scalar(255, 255, 255, 0));
+    typo = Mat(base.size(), CV_8UC4, Scalar(255, 255, 255, 0));
+    composite = Mat(base.size(), CV_8UC3, Scalar(0, 0, 0));
   };
 
 
-  double get_dbox_scaled_edge(DetectionBox& dbox, double scale) {
-    return double(min((dbox.right.x-dbox.left.x), (dbox.top.y-dbox.bottom.y))) * scale;
+  void set_style(string color="light") {
+    if (color == "light") {
+      StyleLight style;
+    }
+    if (color == "dark") {
+      StyleDark style;
+    }
+  }
+
+
+  float get_dbox_scaled_edge(DetectionBox& dbox, float scale=0.1) {
+    return float(min((dbox.right.x-dbox.left.x), (dbox.top.y-dbox.bottom.y))) * scale;
   };
 
 
-  void dbox_outline(DetectionBox& dbox, Scalar rgb, int opacity) {
+  void outline(DetectionBox& dbox, int opacity=127) {
     /* Draw a rectengular outline for the given bbox.
     */
-    Scalar color(rgb[0], rgb[1], rgb[2], opacity);
-    rectangle(imsh, dbox.lefttop, dbox.rightbottom, color, thicka);
+    Scalar color(style.cola[0], style.cola[1], style.cola[2], opacity);
+    rectangle(shapes, dbox.lefttop, dbox.rightbottom, color, thicka);
   };
 
 
-  void dbox_frame(DetectionBox& dbox, Scalar rgb, int opacity=127, double scale=0.1) {
-    // left, top, right, bottom
-    Scalar color(rgb[0], rgb[1], rgb[2], opacity);
-    double edgs = get_dbox_scaled_edge(dbox, scale);
-    // left top
-    line(imsh, dbox.lefttop, Point(dbox.lefttop.x, dbox.lefttop.y-edgs), color, thickb);
-    line(imsh, dbox.lefttop, Point(dbox.lefttop.x-edgs, dbox.lefttop.y), color, thickb);
-    // right top
-    line(imsh, dbox.righttop, Point(dbox.righttop.x, dbox.righttop.y-edgs), color, thickb);
-    line(imsh, dbox.righttop, Point(dbox.righttop.x+edgs, dbox.righttop.y), color, thickb);
-    // right bottom
-    line(imsh, dbox.rightbottom, Point(dbox.rightbottom.x, dbox.rightbottom.y+edgs), color, thickb);
-    line(imsh, dbox.rightbottom, Point(dbox.rightbottom.x+edgs, dbox.rightbottom.y), color, thickb);
-    // left bottom
-    line(imsh, dbox.leftbottom, Point(dbox.leftbottom.x, dbox.leftbottom.y+edgs), color, thickb);
-    line(imsh, dbox.leftbottom, Point(dbox.leftbottom.x-edgs, dbox.leftbottom.y), color, thickb);
+  void frame(DetectionBox& dbox, int opacity=127, float scale=0.1) {
+    Scalar color(style.cola[0], style.cola[1], style.cola[2], opacity);
+    float edge = get_dbox_scaled_edge(dbox, scale);
+    // Left top
+    line(shapes, dbox.lefttop, Point(dbox.lefttop.x, dbox.lefttop.y-edge), color, thickb);
+    line(shapes, dbox.lefttop, Point(dbox.lefttop.x-edge, dbox.lefttop.y), color, thickb);
+    // Right top
+    line(shapes, dbox.righttop, Point(dbox.righttop.x, dbox.righttop.y-edge), color, thickb);
+    line(shapes, dbox.righttop, Point(dbox.righttop.x+edge, dbox.righttop.y), color, thickb);
+    // Right bottom
+    line(shapes, dbox.rightbottom, Point(dbox.rightbottom.x, dbox.rightbottom.y+edge), color, thickb);
+    line(shapes, dbox.rightbottom, Point(dbox.rightbottom.x+edge, dbox.rightbottom.y), color, thickb);
+    // Left bottom
+    line(shapes, dbox.leftbottom, Point(dbox.leftbottom.x, dbox.leftbottom.y+edge), color, thickb);
+    line(shapes, dbox.leftbottom, Point(dbox.leftbottom.x-edge, dbox.leftbottom.y), color, thickb);
   };
 
 
   void dbox_contours() {
-    cout << "draw contour" << endl;
+    cout<<"draw contour"<<endl;
   };
 
 
-  Size get_text_size(string text, int fonth, int padding=8) {
+  Size get_text_size(string text, int fonth=0, int padding=4) {
+    if(fonth==0) {fonth = heading;}
     return ft2r->getTextSize(text, fonth+padding, -1, 0);
   }
 
 
-  void text(string text, Point pos, Scalar rgb, int fonth=18, int padding=8, int opacity=127, bool draw_bbox=true) {
-    Scalar color(rgb[0], rgb[1], rgb[2], opacity);
-    
-    Size txtwh = get_text_size(text, fonth, padding);
-    if (draw_bbox == true) {
-      rectangle(imsh, pos, Point(pos.x+txtwh.width, pos.y+txtwh.height), color, -1);
+  void text(string text, Point pxy, int fonth=0, int padding=4, string alignh="left", string alignv="above", int boxo=127, int txto=255, bool drawBox=true) {
+    Scalar color(style.cola[0], style.cola[1], style.cola[2], boxo);
+    if(fonth == 0) {fonth = heading;}
+    Size twh = get_text_size(text, fonth, padding);
+
+    Point bxy, bwh, txy;
+    int padh = int(padding*0.5);
+    Size twhh = Size(twh.width*0.5, twh.height*0.5);
+
+    // Quick Python port prolly needs optimization
+    if (alignh == "left" or alignv == "above") {
+      bxy = Point(pxy.x, pxy.y-twh.height-padding);
+      bwh = Point(pxy.x+twh.width+padding, pxy.y);
+      txy = Point(bxy.x+padh, bwh.y-padh);
     }
-    Scalar coltxt(style.cold[0], style.cold[1], style.cold[2], opacity);
-    ft2r->putText(imtxt, text, pos, fonth, coltxt, -1, LINE_AA, false);
+
+    if(alignh == "center") {
+      bxy = Point(pxy.x-twhh.width-padh, pxy.y-twh.height-padding);
+      bwh = Point(pxy.x+twhh.width+padh, pxy.y);
+      txy = Point(bxy.x+padh, bwh.y-padh);
+    } 
+    if(alignh == "right") {
+      bxy = Point(pxy.x-twh.width-padding, pxy.y);
+      bwh = Point(pxy.x, pxy.y-twh.height-padding);
+      txy = Point(bxy.x+padh, bxy.y-padh);
+    }
+    if(alignv == "center") {
+      bxy = Point(bxy.x, bxy.y + twhh.height + padh);
+      bwh = Point(bwh.x, bwh.y + twhh.height + padh);
+      txy = Point(txy.x, txy.y + twhh.height + padh);
+    }
+    if(alignv == "below") {
+      bxy = Point(bxy.x, bxy.y + twh.height + padding);
+      bwh = Point(bwh.x, bwh.y + twh.height + padding);
+      txy = Point(txy.x, txy.y + twh.height + padding);
+    }
+
+    if (drawBox == true) {rectangle(shapes, bxy, bwh, color, -1);}
+    ft2r->putText(typo, text, txy, fonth, Scalar(style.cold[0], style.cold[1], style.cold[2], txto), -1, LINE_AA, true);
   };
 
 
@@ -242,43 +285,36 @@ public:
     For information on other c->c++ conversion check out this link: Source
 
     */
-    imcv.convertTo(imcv, CV_32FC3);
-    imsh.convertTo(imsh, CV_32FC4);
-    imtxt.convertTo(imtxt, CV_32FC4);
-    imout.convertTo(imout, CV_32FC3);
+    base.convertTo(base, CV_32FC3);
+    shapes.convertTo(shapes, CV_32FC4);
+    typo.convertTo(typo, CV_32FC4);
+    composite.convertTo(composite, CV_32FC3);
 
-    Mat imsh_mask;
-    extractChannel(imsh, imsh_mask, 3);
-    imsh_mask /= 255.f;
-    Mat imtxt_mask;
+    Mat shapes_mask;
+    extractChannel(shapes, shapes_mask, 3);
+    shapes_mask *= 0.00392156863f;
+    // shapes_mask /= 255.f;
 
-    extractChannel(imtxt, imtxt_mask, 3);
-    imtxt_mask /= 255.f;
+    Mat typo_mash;
+    extractChannel(typo, typo_mash, 3);
+    typo_mash *= 0.00392156863f;
+    // typo_mash /= 255.f;
 
     // Blend composites
-    for(int y=0; y<imcv.size().height; y++) {
-      for(int x=0; x<imcv.size().width; x++) {
-        for(int c=0; c<imcv.channels(); c++) {
-          imout.at<Vec3f>(y,x)[c] = (
-            (imcv.at<Vec3f>(y,x)[c] * (1.0-imsh_mask.at<float>(y,x)))
-            +(imsh.at<Vec4f>(y,x)[c] * imsh_mask.at<float>(y,x)) * (1.0-imtxt_mask.at<float>(y,x))
-            +(imtxt.at<Vec4f>(y,x)[c] * imtxt_mask.at<float>(y,x))
+    // optimize later? https://learnopencv.com/alpha-blending-using-opencv-cpp-python/ 
+    for(int y=0; y<base.size().height; y++) {
+      for(int x=0; x<base.size().width; x++) {
+        for(int c=0; c<base.channels(); c++) {
+          composite.at<Vec3f>(y,x)[c] = (
+            (base.at<Vec3f>(y,x)[c] * (1.0-shapes_mask.at<float>(y,x)))
+            +(shapes.at<Vec4f>(y,x)[c] * shapes_mask.at<float>(y,x)) * (1.0-typo_mash.at<float>(y,x))
+            +(typo.at<Vec4f>(y,x)[c] * typo_mash.at<float>(y,x))
           );
         }
       }
     }
-
-    // for(int y=0; y<imcv.size().height; y++) {
-    //   for(int x=0; x<imcv.size().width; x++) {
-    //     for(int c=0; c<imcv.channels(); c++) {
-    //       imout.at<Vec3f>(y,x)[c] = (imsh.at<Vec4f>(y,x)[3]);
-    //     }
-    //   }
-    // }
-
-  
-    imout.convertTo(imout, CV_8UC3);
-    return imout;
+    composite.convertTo(composite, CV_8UC3);
+    return composite;
   }
 };
 

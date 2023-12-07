@@ -50,7 +50,6 @@ from api import cv2 as cv
   
 
 
-
 styles = {
   # BGR
   "light": {
@@ -269,22 +268,22 @@ class DrawOCVUi():
     """Sets the ui thicnkess values based on the input image resolution.
 
     Reference https://optiviewusa.com/cctv-video-resolutions/ :
-      QCIF						176 x 120		Quarter CIF (half the height and width as CIF)
-      CIF							352 x 240
-      2CIF						704 x 240		  2 times CIF width
-      4CIF						704 x 480		  2 times CIF width and 2 times CIF height
-      D1							720 x 480		  aka "Full D1"
-      720p HD					1280 x 720		720p High Definition aka "HD-SDI"
-      960p HD					1280 x 960		960p High Definition - a Sony specific HD standard
-      1.3 MP					1280 x 1024		aka "1 Megapixel" or "1MP"
-      2 MP						1600 x 1200		2 Megapixel
-      1080p HD				1920 x 1080		1080p High Definition
-      3 MP						2048 x 1536		3 Megapixel
-      4 MP						2688 x 1520		4 Megapixel
-      5 MP						2592 x 1944		5 Megapixel
-      6 MP						3072 x 2048		6 Megapixel
-      8 MP / 4K (Coax)			3840 x 2160		8 Megapixel
-      12 MP / 4K (IP)				4000 x 3000
+      QCIF						  176 x 120		Quarter CIF (half the height and width as CIF)
+      CIF							  352 x 240
+      2CIF						  704 x 240		  2 times CIF width
+      4CIF						  704 x 480		  2 times CIF width and 2 times CIF height
+      D1							  720 x 480		  aka "Full D1"
+      720p HD					  1280 x 720		720p High Definition aka "HD-SDI"
+      960p HD					  1280 x 960		960p High Definition - a Sony specific HD standard
+      1.3 MP					  1280 x 1024		aka "1 Megapixel" or "1MP"
+      2 MP						  1600 x 1200		2 Megapixel
+      1080p HD				  1920 x 1080		1080p High Definition
+      3 MP						  2048 x 1536		3 Megapixel
+      4 MP						  2688 x 1520		4 Megapixel
+      5 MP						  2592 x 1944		5 Megapixel
+      6 MP						  3072 x 2048		6 Megapixel
+      8 MP / 4K (Coax)	3840 x 2160		8 Megapixel
+      12 MP / 4K (IP)		4000 x 3000
 
     Args:
       mode (string): Mode which scales the ui, auto, small, medium, large, custom
