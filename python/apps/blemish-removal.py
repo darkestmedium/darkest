@@ -564,6 +564,8 @@ def get_patches(position):
   posx, posy = position
   # Finding specific number of evenly spaced points around our patch
   t = np.linspace(0, 2 * np.pi, number_of_candidates + 1)  # +1 because, the first and the last one will be the same
+  tCos = (np.round(2 * radius * np.cos(t)) + posx).astype(int)
+  tSin = (np.round(2 * radius * np.sin(t)) + posy).astype(int)
   candidate_centers = np.c_[
     (np.round(2 * radius * np.cos(t)) + posx).astype(int),
     (np.round(2 * radius * np.sin(t)) + posy).astype(int)
@@ -574,7 +576,11 @@ def get_patches(position):
     and 0 + radius < center[1] < image.shape[0] - radius
     for center in candidate_centers
   ])
-  return [image[posy - radius:posy + radius, posx - radius:posx + radius] for [posx, posy] in candidate_centers[condition]]
+  
+  patches = [image[posy - radius:posy + radius, posx - radius:posx + radius] for [posx, posy] in candidate_centers[condition]]
+  print(patches)
+  return patches
+
 
 
 
@@ -599,6 +605,7 @@ def remove_blemish(action, x, y, flags, userdata):
 
     # dont do blemish removal if the patch doesnt fit in the image
     patch_fits = 0 + radius < x < image.shape[1] - radius and 0 + radius < y < image.shape[0] - radius
+
     if not patch_fits: return
 
     patches = get_patches(patch_center)
@@ -606,6 +613,10 @@ def remove_blemish(action, x, y, flags, userdata):
 
     gradient_min_idx = np.argmin(gradients)
     gradient_min_patch = patches[int(gradient_min_idx)]
+
+    print(patches.__len__())
+    print(gradients)
+    # print(gradient_min_idx)
 
     mask = np.full_like(gradient_min_patch, 255, dtype=gradient_min_patch.dtype)
     image = cv2.seamlessClone(gradient_min_patch, image, mask, patch_center, cv2.NORMAL_CLONE)

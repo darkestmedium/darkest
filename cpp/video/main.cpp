@@ -36,9 +36,9 @@ void lmb(int action, int x, int y, int flags, void *userdata) {
 
 
 struct Syntax : public argparse::Args {
-  string &filePath = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/video/focus-test.mp4");
+  string &filePath      = kwarg("fp,filePath", "Path to the file.").set_default("/home/ccpcpp/Dropbox/code/darkest/resources/video/focus-test.mp4");
   int &fps              = kwarg("fps,framerate", "Playback framerate in ms - 30fps / 33.33ms.").set_default(33);
-  string &winName  = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
+  string &winName       = kwarg("wn,winName", "Name of the opencv window.").set_default("OpenCV - GTK - Window");
   bool &verbose         = flag("v,verbose", "Toggle verbose");
   bool &help            = flag("h,help", "Display usage");
 
@@ -69,10 +69,8 @@ int main(int argc, char* argv[]) {
 
   namedWindow(args.winName, WINDOW_NORMAL);
 
-
   VideoCapture cap(args.filePath);
   if(!cap.isOpened()) {cout << "Error opening video stream or file: " << args.filePath << endl;}
-
 
   setMouseCallback(args.winName, lmb);
 

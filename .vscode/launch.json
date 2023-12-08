@@ -4,7 +4,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/image-alignment",
+      "program": "${workspaceFolder}/build/blemish-removal",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

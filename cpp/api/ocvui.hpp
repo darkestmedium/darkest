@@ -241,7 +241,6 @@ public:
       bwh = Point(pxy.x+twh.width+padding, pxy.y);
       txy = Point(bxy.x+padh, bwh.y-padh);
     }
-
     if(alignh == "center") {
       bxy = Point(pxy.x-twhh.width-padh, pxy.y-twh.height-padding);
       bwh = Point(pxy.x+twhh.width+padh, pxy.y);
