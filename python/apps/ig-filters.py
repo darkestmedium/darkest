@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 winname = "OpenCV Window"
 cv2.namedWindow(winname, cv2.WINDOW_NORMAL)
 
-imagePath = "/home/ccpcpp/Downloads/trump.jpg"
+imagePath = "/home/ccpcpp/Dropbox/code/darkest/resources/images/trump.jpg"
 
 
 import matplotlib
@@ -32,6 +32,7 @@ def color_quantize(image, colors=8):
   """Colour quantization.
   """
   data = np.float32(image).reshape((-1, 3))
+  print(data)
   criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.001)
   ret, label, center = cv2.kmeans(data, colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
   center = np.uint8(center)

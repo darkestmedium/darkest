@@ -45,14 +45,13 @@ int main(int, char**) {
   else
     std::cout << "QR Code NOT Detected" << std::endl;
 
-
   int n = bbox.rows;
   for(int i = 0 ; i < n ; i++) {
     cv::line(
       img, 
-      cv::Point(bbox.at<float>(i,0),bbox.at<float>(i,1)), 
+      cv::Point(bbox.at<float>(i,0), bbox.at<float>(i,1)), 
       cv::Point(bbox.at<float>((i+1) % n,0), bbox.at<float>((i+1) % n,1)), 
-      cv::Scalar(1,0,0), 3
+      cv::Scalar(1, 0, 0), 3
     );
   }
 

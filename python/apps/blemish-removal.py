@@ -578,19 +578,40 @@ def get_patches(position):
   ])
   
   patches = [image[posy - radius:posy + radius, posx - radius:posx + radius] for [posx, posy] in candidate_centers[condition]]
-  print(patches)
   return patches
 
+
+
+
+def calculate_candidate_gradient_measures(patches):
+  sobel_x = [calculate_mean_gradient(patch, 1, 0) for patch in patches]
+  sobel_y = [calculate_mean_gradient(patch, 0, 1) for patch in patches]
+
+  total_gradients = np.add(sobel_x, sobel_y)
+  return total_gradients
+
+
+# Calculates a single number gradient score (vertical or horizontal) for a single image
+def calculate_mean_gradient(image_patch, xorder, yorder):
+  sobel = cv2.Sobel(image_patch, cv2.CV_64F, xorder, yorder, ksize=3)
+  abs_sobel = np.abs(sobel)  # Because sobel results can be negative
+  mean_gradient = np.mean(np.uint8(abs_sobel))
+  return mean_gradient
 
 
 
 def get_gradient_measures(patches):
   """Calculates single number gradient score for every patch.
   """
-  return np.add(
-    [np.mean(np.uint8(np.abs(cv2.Sobel(patch, cv2.CV_64F, 1, 0, ksize=3)))) for patch in patches],
-    [np.mean(np.uint8(np.abs(cv2.Sobel(patch, cv2.CV_64F, 0, 1, ksize=3)))) for patch in patches]
-  )
+  for patch in patches:
+    gradient_x = cv2.Sobel(patch, cv2.CV_64F, 1, 0, ksize=3)
+    gradient_y = cv2.Sobel(patch, cv2.CV_64F, 0, 1, ksize=3)
+
+    mean_gradient_x = np.mean(np.uint8(np.abs(gradient_x)))
+    mean_gradient_y = np.mean(np.uint8(np.abs(gradient_y)))
+
+  return np.add(mean_gradient_x, mean_gradient_x)
+
 
 
 
@@ -609,18 +630,17 @@ def remove_blemish(action, x, y, flags, userdata):
     if not patch_fits: return
 
     patches = get_patches(patch_center)
-    gradients = get_gradient_measures(patches)
+    gradients = calculate_candidate_gradient_measures(patches)
 
     gradient_min_idx = np.argmin(gradients)
-    gradient_min_patch = patches[int(gradient_min_idx)]
-
-    print(patches.__len__())
     print(gradients)
-    # print(gradient_min_idx)
+    print(gradient_min_idx)
+    gradient_min_patch = patches[int(gradient_min_idx)]
 
     mask = np.full_like(gradient_min_patch, 255, dtype=gradient_min_patch.dtype)
     image = cv2.seamlessClone(gradient_min_patch, image, mask, patch_center, cv2.NORMAL_CLONE)
 
+    # cv2.imshow(winname, gradient_min_patch)
     cv2.imshow(winname, image)
 
 

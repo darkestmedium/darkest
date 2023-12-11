@@ -21,6 +21,7 @@ using namespace cv;
 
 
 
+
 struct UserData {
   /* Struct with user data for callback functions.
   */
@@ -28,15 +29,18 @@ struct UserData {
   Size size;
   int radius;
   int number_of_candidates;
+  string winName;
 
   // Constructors
-  UserData()
+  UserData(string window)
     : radius(16)
     , number_of_candidates(16)
+    , winName(window)
   {};
   // Destructors
   ~UserData() {};
 };
+
 
 
 
@@ -84,32 +88,35 @@ vector<Mat> get_patches(Point position, int& number_of_candidates, int& radius, 
 
 
 
-Mat get_gradient_measures(const vector<Mat>& patches) {
 
-  Mat gradient_scores(patches.size(), 1, CV_32F);
+double calculateMeanGradient(const cv::Mat& imagePatch, int xOrder, int yOrder) {
+  cv::Mat sobel;
+  cv::Sobel(imagePatch, sobel, CV_32F, xOrder, yOrder, 3);
+  cv::Mat absSobel = cv::abs(sobel);
+  double meanGradient = cv::mean(absSobel)[0];
+  return meanGradient;
+}
 
-  for (size_t i = 0; i < patches.size(); ++i) {
-    Mat gradient_x, gradient_y;
 
-    Sobel(patches[i], gradient_x, CV_32F, 1, 0, 3);
-    Sobel(patches[i], gradient_y, CV_32F, 0, 1, 3);
 
-    double mean_gradient_x = mean(abs(gradient_x))[0];
-    double mean_gradient_y = mean(abs(gradient_y))[0];
 
-    gradient_scores.at<double>(i) = mean_gradient_x + mean_gradient_y;
+cv::Mat calculateCandidateGradientMeasures(const std::vector<cv::Mat>& patches) {
+  std::vector<double> sobelX, sobelY;
+  // Calculate horizontal (x) and vertical (y) Sobel gradients for each patch
+  for (const auto& patch : patches) {
+    sobelX.push_back(calculateMeanGradient(patch, 1, 0));
+    sobelY.push_back(calculateMeanGradient(patch, 0, 1));
   }
+  // Sum the horizontal and vertical gradients
+  std::vector<float> totalGradients(patches.size());
+  for (size_t i = 0; i < patches.size(); ++i) {
+    totalGradients[i] = sobelX[i] + sobelY[i];
+  }
+  // Convert the vector to a one-dimensional cv::Mat
+  cv::Mat resultMat(totalGradients, false);
 
-  return gradient_scores;
+  return resultMat;
 }
-
-
-void apply_seamless_clone(const Mat& gradient_min_patch, Mat& image, const Point& position) {
-  int radius = gradient_min_patch.rows / 2;
-  Mat mask = Mat::ones(gradient_min_patch.size(), gradient_min_patch.type()) * 255;
-  seamlessClone(gradient_min_patch, image, mask, position, image, NORMAL_CLONE);
-}
-
 
 
 
@@ -123,29 +130,33 @@ void lmb(int action, int x, int y, int flags, void *userdata) {
       Point position(x, y);
 
       bool patchFits = (
-        0 + data->radius < x 
-        and x < data->size.width - data->radius) 
-        and (0 + data->radius < y 
+        0 + data->radius < x
+        and x < data->size.width - data->radius)
+        and (0 + data->radius < y
         and y < data->size.height - data->radius
       );
       if(!patchFits) {break;}
 
       vector<Mat> patches = get_patches(position, data->number_of_candidates, data->radius, data->image);
-      // Mat gradients = get_gradient_measures(patches);
+      Mat gradients = calculateCandidateGradientMeasures(patches);
 
+      // Find the index of the patch with the minimum gradient
+      int gradient_min_idx;
+      minMaxIdx(gradients, nullptr, nullptr, &gradient_min_idx);
+      Mat gradient_min_patch = patches[gradient_min_idx];
 
-      // // Find the index of the patch with the minimum gradient
-      // int gradient_min_idx;
-      // minMaxIdx(gradients, nullptr, nullptr, &gradient_min_idx);
-      
-      // cout << patches.size() << endl;
-      // cout << gradients << endl;
-  
-      // // Retrieve the patch with the minimum gradient
-      // Mat gradient_min_patch = patches[gradient_min_idx];
-    
-      // apply_seamless_clone(gradient_min_patch, data->image, position);
+      gradient_min_patch.convertTo(gradient_min_patch, CV_8UC3);
+      data->image.convertTo(data->image, CV_8UC3);
 
+      Mat mask = Mat::ones(gradient_min_patch.size(), CV_8U)*255;
+
+      Mat input(data->image);
+
+      Mat output;
+
+      seamlessClone(gradient_min_patch, data->image, mask, position, output, NORMAL_CLONE);
+      data->image = output;
+      imshow(data->winName, data->image);
       break;
     // case EVENT_LBUTTONUP:
     //   cout<<"LMB released at: "<<x<<" x "<<y<<endl;
@@ -188,7 +199,7 @@ int main(int argc, char* argv[]) {
 
   namedWindow(args.winName, WINDOW_NORMAL);
 
-  UserData data;
+  UserData data(args.winName);
   setMouseCallback(args.winName, lmb, &data);
 
 
@@ -198,16 +209,31 @@ int main(int argc, char* argv[]) {
   data.dummy = image;
   data.size = image.size();
 
-  switch(waitKey(1)) {
-    case 'c':
-      cout << "Key pressed: 'c'" << endl;
+  int k=0;
+  while(k!=27) {  // loop until esc is pressed
+    imshow(args.winName, data.image);
+    k = waitKey(1);
+    if(k == 99) {  // If c is pressed, clear the window, using the dummy image
+      cout << "'c' was pressed, image reset." << endl;
       data.image = data.dummy;
-      break;
-    case 27:
-      cout << "Key pressed: 'esc'. Stopping the video" << endl;
-      return EXIT_FAILURE;
+      imshow(args.winName, data.image);
+    }
   }
-  imshow(args.winName, image);
-  waitKey(0);
+
+  // switch(waitKey(1)) {
+  //   case 'c':
+  //     cout << "Key pressed: 'c'" << endl;
+  //     // data.image = data.dummy;
+  //     imshow(args.winName, data.dummy);
+  //     break;
+  //   case 27:
+  //     cout << "Key pressed: 'esc'. Stopping the video" << endl;
+  //     return EXIT_FAILURE;
+  //   // default: // -1 is returned and printed on every frame
+  //   //   imshow(args.winName, data.image);
+  //   //   // cout << "Key pressed: " << key << endl;
+  //   //   break;
+  // }
+  
   return EXIT_SUCCESS;
 }

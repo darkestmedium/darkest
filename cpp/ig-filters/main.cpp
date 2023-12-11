@@ -19,26 +19,50 @@ using namespace cv;
 
 
 
-cv::Mat get_outline(const cv::Mat& image, int blur=5, int edge=9) {
-  cv::Mat imageBlur;
-  cv::medianBlur(image, imageBlur, blur);
 
-  cv::Mat result;
-  cv::adaptiveThreshold(imageBlur, result, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, edge, blur);
-
+Mat get_outline(Mat image, int blur=5, int edge=9) {
+  Mat imageBlur;
+  medianBlur(image, imageBlur, blur);
+  Mat result;
+  adaptiveThreshold(imageBlur, result, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, edge, blur);
   return result;
 }
 
 
-cv::Mat color_quantize(const cv::Mat& image, int colors=8) {
-  cv::Mat data = image;
+
+
+Mat cartoonify(Mat image) {
+  Mat cartoonImage;
+
+  /// YOUR CODE HERE
+
+  Mat imageblur;
+  edgePreservingFilter(image, imageblur, RECURS_FILTER);
+
+  Mat imgoutline = image;
+  cvtColor(imgoutline, imgoutline, COLOR_BGR2GRAY);
+  adaptiveThreshold(imgoutline, imgoutline, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 9);
+
+  Mat mask = imgoutline;
+  cvtColor(imgoutline, imgoutline, COLOR_GRAY2BGR);
+
+  bitwise_and(imageblur, imgoutline, cartoonImage, mask);
+
+
+  return cartoonImage;
+}
+
+
+
+
+Mat color_quantize(const Mat& image, int colors=8) {
+  Mat data = image;
   data.convertTo(data, CV_32F);
 
-  cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::MAX_ITER, 20, 0.001);
+  TermCriteria criteria = TermCriteria(TermCriteria::EPS + TermCriteria::MAX_ITER, 20, 0.001);
 
-  cv::Mat center, label;
-  // auto label;
-  cv::kmeans(data, colors, label, criteria, 10, cv::KMEANS_RANDOM_CENTERS, center);
+  Mat center, label;
+  kmeans(data, colors, label, criteria, 10, KMEANS_RANDOM_CENTERS, center);
   center.convertTo(center, CV_8U);
 
   return center;
@@ -46,25 +70,25 @@ cv::Mat color_quantize(const cv::Mat& image, int colors=8) {
 
 
 
-cv::Mat pencilSketch(const cv::Mat& image, int arguments=0, int blur=5, int edge=9, double alpha=0.5) {
-  cv::Mat imgrey;
-  cv::cvtColor(image, imgrey, cv::COLOR_BGR2GRAY);
 
-  cv::Mat imgreyquant = color_quantize(imgrey);
-  cv::Mat imageblur;
-  cv::medianBlur(imgreyquant, imageblur, blur);
+Mat pencilSketch(Mat image) {
 
-  cv::Mat imoutline;
-  cv::Mat imoutlinecol;
-  cv::pencilSketch(image, imoutline, imoutlinecol, 60.0f, 0.075f, 0.085f);
+  Mat pencilSketchImage;
 
-  cv::Mat pencilSketchImage;
-  cv::addWeighted(imageblur, 1 - alpha, imoutline, alpha, 0, pencilSketchImage);
+  Mat imgrey;
+  cvtColor(image, imgrey, COLOR_BGR2GRAY);
+  Mat imageblur;
+  edgePreservingFilter(imgrey, imageblur, RECURS_FILTER);
 
-  cv::cvtColor(pencilSketchImage, pencilSketchImage, cv::COLOR_GRAY2BGR);
+  Mat imgoutline, imgoutlinecol;
+  adaptiveThreshold(imgrey, imgoutline, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 9);
+  // pencilSketch(image, imgoutline, imgoutlinecol, 50.0f, 0.1f, 0.1f);
+
+  bitwise_and(imageblur, imgoutline, pencilSketchImage, imgoutline);
 
   return pencilSketchImage;
 }
+
 
 
 
@@ -106,16 +130,12 @@ int main(int argc, char* argv[]) {
     cout << "Can't read file '" << args.filePath << "'\n";
     return EXIT_FAILURE;
   }
-  // Mat imageCopy = image.clone();
+
+  // Mat imgrey = pencilSketch(image);
+  Mat imgcartoon = cartoonify(image);
 
 
-  cv::Mat imgrey;
-  cv::cvtColor(image, imgrey, cv::COLOR_BGR2GRAY);
-  Mat imoutline = get_outline(imgrey);
-
-
-  imshow(args.winName, imoutline);
-  // imshow(args.winName, image);
+  imshow(args.winName, imgcartoon);
 
   waitKey(0);
   return EXIT_SUCCESS;

@@ -30,7 +30,6 @@ data = {
 
 
 
-
 def lmb(action, x, y, flags, userdata):
   """Left mouse button event method.
   """
@@ -59,14 +58,14 @@ def trackbar(*args):
 
 
 def unwarp(h):
-  h = h.reshape((4,2))
-  hnew = np.zeros((4,2), dtype = np.float32)
+  h = h.reshape((4, 2))
+  hnew = np.zeros((4, 2), dtype = np.float32)
 
   add = h.sum(1)
   hnew[0] = h[np.argmin(add)]
   hnew[2] = h[np.argmax(add)]
 
-  diff = np.diff(h,axis = 1)
+  diff = np.diff(h, axis=1)
   hnew[1] = h[np.argmin(diff)]
   hnew[3] = h[np.argmax(diff)]
 
@@ -88,6 +87,8 @@ def get_contours(points):
       break
 
   # mapping target points to 800x800 quadrilateral
+
+
   return (unwarp(target), target)
 
 
@@ -157,6 +158,7 @@ if __name__ == "__main__":
   approx, target = get_contours(imgedges)
   width, height = get_resolution(approx)
 
+
   persptrans = cv2.getPerspectiveTransform(approx, np.float32([[0, 0], [width, 0], [width, height], [0, height]]))
   imgout = cv2.warpPerspective(image, persptrans, (width, height))
 
@@ -164,6 +166,8 @@ if __name__ == "__main__":
 
   data["imgout"] = cv2.cvtColor(imgout, cv2.COLOR_BGR2GRAY)
 
+  print(width, height)
+  print(persptrans)
   # key = cv2.waitKey(1)
   # match key:
   #   case 99:  # c is pressed
