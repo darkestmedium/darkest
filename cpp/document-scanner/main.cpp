@@ -18,9 +18,62 @@ using namespace std;
 using namespace cv;
 
 
+struct UserData {
+  /* Struct with user data for callback functions.
+  */
+  Mat image, imgout;
+  int trackbar;
+  string winName;
+
+  // Constructors
+  UserData(string window)
+    : winName(window)
+  {};
+  // Destructors
+  ~UserData() {};
+};
 
 
-Mat unwarp(const Mat& target) {
+Mat preProcess(const Mat& image) {
+  // Convert to grayscale
+  Mat imgrey;
+  cvtColor(image, imgrey, COLOR_BGR2GRAY);
+  Mat imgblur;
+  medianBlur(imgrey, imgblur, 7);
+  Mat imgedges;
+  Canny(imgblur, imgedges, 0, 50);
+
+  return imgedges;
+}
+
+
+Mat getContours(const Mat& points) {
+  // Find contours in the edged image
+  vector<vector<Point>> contours;
+  findContours(points, contours, RETR_LIST, CHAIN_APPROX_NONE);
+  sort(contours.begin(), contours.end(), [](const auto& a, const auto& b) {
+    return contourArea(a) > contourArea(b);
+  });
+
+  // Get approximate contour
+  // Mat target;
+  Mat target;
+  for (const auto& contour : contours) {
+    float pt = arcLength(contour, true);
+    Mat approx;
+    approxPolyDP(contour, approx, 0.02 * pt, true);
+    if (approx.rows == 4) {
+      target = approx;
+      break;
+    }
+  }
+
+  return target;
+  // return make_pair(uwrap(target), target);
+}
+
+
+Mat uwrap(const Mat& target) {
   Mat hnew = Mat::zeros(4, 2, CV_32S);
   // Yeah, the reduce sum function is not wanna work so we do it manually for now
   Mat add(1, 4, CV_32S);
@@ -46,33 +99,6 @@ Mat unwarp(const Mat& target) {
   hnew.at<Point2i>(3) = target.at<Point2i>(max_diff.x);
 
   return hnew;
-}
-
-
-// pair<Mat, Mat> getContours(const Mat& points) {
-Mat getContours(const Mat& points) {
-  // Find contours in the edged image
-  vector<vector<Point>> contours;
-  findContours(points, contours, RETR_LIST, CHAIN_APPROX_NONE);
-  sort(contours.begin(), contours.end(), [](const auto& a, const auto& b) {
-    return contourArea(a) > contourArea(b);
-  });
-
-  // Get approximate contour
-  // Mat target;
-  Mat target;
-  for (const auto& contour : contours) {
-    float pt = arcLength(contour, true);
-    Mat approx;
-    approxPolyDP(contour, approx, 0.02 * pt, true);
-    if (approx.rows == 4) {
-      target = approx;
-      break;
-    }
-  }
-
-  return target;
-  // return make_pair(unwarp(target), target);
 }
 
 
@@ -126,23 +152,51 @@ Size getResolution(const Mat& contours, const string& format = "a4") {
 }
 
 
+Mat unwarp(const Mat& image, Mat approx, Size resolution) {
+  Mat persptransform = (cv::Mat_<float>(4, 2) <<
+    0, 0,
+    resolution.width, 0,
+    resolution.width, resolution.height,
+    0, resolution.height
+  );
+  Mat m32f_approx;
+  approx.convertTo(m32f_approx, CV_32F);
+  Mat M = getPerspectiveTransform(m32f_approx, persptransform);
+  Mat imgout;
+  warpPerspective(image, imgout, M, resolution);
+  imgout.convertTo(imgout, CV_8UC1);
+  return imgout;
+}
 
 
-// function which will be called on mouse input
 void lmb(int action, int x, int y, int flags, void *userdata) {
-  // Mark the top left corner when left mouse button is pressed
-  if(action == EVENT_LBUTTONDOWN) {
-    cout<<"LMB pressed at: "<<x<<" x "<<y<<endl;
+  if (userdata == nullptr) {  // Handle null pointer gracefully
+    return;
   }
-  else if(action == EVENT_LBUTTONUP) {
-    cout<<"LMB released at: "<<x<<" x "<<y<<endl;
+  UserData* data = static_cast<UserData*>(userdata);
+
+  // Mark the top left corner when left mouse button is pressed
+  switch(action) {
+    case EVENT_LBUTTONUP:
+      // Ensure imgout is valid before converting and saving
+      if (!data->imgout.empty()) {
+        if (data->trackbar>0) {
+          detailEnhance(data->imgout, data->imgout, 10, 0.15f);
+        }
+        imwrite("document.png", data->imgout);
+        cout << "Image saved!" << endl;
+      } else {
+        cerr << "Output image is empty!" << endl;
+      }
+      break;
   }
 }
 
 
 // Callback functions
-void trackbar(int val, void*) {
-  cout << "Trackbar: " << val << endl;
+void trackbar(int val, void* userdata) {
+  UserData* data = static_cast<UserData*>(userdata);
+  data->trackbar = val;
 }
 
 
@@ -177,52 +231,26 @@ int main(int argc, char* argv[]) {
   if(args.verbose) args.print();
 
   namedWindow(args.winName, WINDOW_NORMAL);
+  UserData data(args.winName);
+  setMouseCallback(args.winName, lmb, &data);
 
-  setMouseCallback(args.winName, lmb);
-  createTrackbar("Trackbar", args.winName, 0, 100, trackbar);
+  createTrackbar("Trackbar", args.winName, 0, 1, trackbar, &data);
 
   Mat image = imread(args.filePath);
   if (image.empty()) {
     cout << "Can't read file '" << args.filePath << "'\n";
     return EXIT_FAILURE;
   }
+  data.image = image;
 
-  // Convert to grayscale
-  Mat imgrey;
-  cvtColor(image, imgrey, COLOR_BGR2GRAY);
-  Mat imgblur;
-  medianBlur(imgrey, imgblur, 7);
-  Mat imgedges;
-  Canny(imgblur, imgedges, 0, 50);
-
-
+  Mat imgedges = preProcess(image);
   Mat target = getContours(imgedges);
-  Mat approx = unwarp(target);
-
-
-  cout << target << endl;
-  cout << approx << endl;
-
-
+  Mat approx = uwrap(target);
   Size resolution = getResolution(target);
-  // cout << resolution.width << endl;
-  // cout << resolution.height << endl;
-
-  // Get the perspective transform
-  Mat persptransform = (cv::Mat_<float>(4, 2) <<
-    0, 0,
-    resolution.width, 0,
-    resolution.width, resolution.height,
-    0, resolution.height
-  );
-  Mat m32f_approx;
-  approx.convertTo(m32f_approx, CV_32F);
-  Mat M = getPerspectiveTransform(m32f_approx, persptransform);
-  Mat imgout;
-  warpPerspective(image, imgout, M, resolution);
+  data.imgout = unwarp(image, approx, resolution);
 
 
-  drawContours(image, target, -1, Scalar(0, 255, 0), 4);  // draws only four dots :/
+  // drawContours(image, target, -1, Scalar(0, 255, 0), 4);  // draws only four dots :/
   int n = target.rows;
   for(int i = 0 ; i < n ; i++) {
     cv::line(
@@ -233,7 +261,7 @@ int main(int argc, char* argv[]) {
     );
   }
 
-  imshow(args.winName, imgout);
+  imshow(args.winName, data.image);
   waitKey(0);
   return EXIT_SUCCESS;
 }

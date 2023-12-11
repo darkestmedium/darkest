@@ -13,7 +13,6 @@
 
 
 
-
 using namespace std;
 using namespace cv;
 
@@ -44,14 +43,12 @@ struct UserData {
 
 
 
-
 template <typename T>
 inline float get_luminance(Vec<T,3> &color) {
   /* Calculates the color luminance.
   */
   return color[0] * 0.114 + color[1] * 0.587 + color[2] * 0.299;
 }
-
 
 
 
