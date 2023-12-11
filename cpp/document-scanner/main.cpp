@@ -20,27 +20,37 @@ using namespace cv;
 
 
 
-Mat unwarp(const Mat& h) {
-  Mat hnew(2, 4, CV_64F);
+Mat unwarp(const Mat& target) {
+  Mat hnew = Mat::zeros(4, 2, CV_32S);
+  // Yeah, the reduce sum function is not wanna work so we do it manually for now
+  Mat add(1, 4, CV_32S);
+  add.col(0) = target.at<int>(0,0) + target.at<int>(0,1);
+  add.col(1) = target.at<int>(1,0) + target.at<int>(1,1);
+  add.col(2) = target.at<int>(2,0) + target.at<int>(2,1);
+  add.col(3) = target.at<int>(3,0) + target.at<int>(3,1);
 
-  Mat reshaped_h = h.reshape(2, 4);
-  Mat add = reshaped_h.col(0) + reshaped_h.col(1);
-  Mat diff = reshaped_h.col(0) - reshaped_h.col(1);
+  Mat diff(1, 4, CV_32S);
+  diff.col(0) = target.at<int>(0,1) - target.at<int>(0,0);
+  diff.col(1) = target.at<int>(1,1) - target.at<int>(1,0);
+  diff.col(2) = target.at<int>(2,1) - target.at<int>(2,0);
+  diff.col(3) = target.at<int>(3,1) - target.at<int>(3,0);
+
 
   Point min_add, max_add, min_diff, max_diff;
   minMaxLoc(add, nullptr, nullptr, &min_add, &max_add);
   minMaxLoc(diff, nullptr, nullptr, &min_diff, &max_diff);
 
-  hnew.row(0) = reshaped_h.row(min_add.y);
-  hnew.row(2) = reshaped_h.row(max_add.y);
-  hnew.row(1) = reshaped_h.row(min_diff.y);
-  hnew.row(3) = reshaped_h.row(max_diff.y);
+  hnew.at<Point2i>(0) = target.at<Point2i>(min_add.x);
+  hnew.at<Point2i>(2) = target.at<Point2i>(max_add.x);
+  hnew.at<Point2i>(1) = target.at<Point2i>(min_diff.x);
+  hnew.at<Point2i>(3) = target.at<Point2i>(max_diff.x);
 
   return hnew;
 }
 
 
-pair<Mat, Mat> getContours(const Mat& points) {
+// pair<Mat, Mat> getContours(const Mat& points) {
+Mat getContours(const Mat& points) {
   // Find contours in the edged image
   vector<vector<Point>> contours;
   findContours(points, contours, RETR_LIST, CHAIN_APPROX_NONE);
@@ -49,8 +59,8 @@ pair<Mat, Mat> getContours(const Mat& points) {
   });
 
   // Get approximate contour
+  // Mat target;
   Mat target;
-  // Mat target = Mat(Size(2, 4), CV_64F);
   for (const auto& contour : contours) {
     float pt = arcLength(contour, true);
     Mat approx;
@@ -61,7 +71,8 @@ pair<Mat, Mat> getContours(const Mat& points) {
     }
   }
 
-  return make_pair(unwarp(target), target);
+  return target;
+  // return make_pair(unwarp(target), target);
 }
 
 
@@ -185,67 +196,12 @@ int main(int argc, char* argv[]) {
   Canny(imgblur, imgedges, 0, 50);
 
 
-  // Find contours in the edged image
-  vector<vector<Point>> contours;
-  findContours(imgedges, contours, RETR_LIST, CHAIN_APPROX_NONE);
-  sort(contours.begin(), contours.end(), [](const auto& a, const auto& b) {
-    return contourArea(a) > contourArea(b);
-  });
-
-  // Get approximate contour
-  Mat target;
-  for (const auto& contour : contours) {
-    float pt = arcLength(contour, true);
-    Mat approx;
-    approxPolyDP(contour, approx, 0.02 * pt, true);
-    if (approx.rows == 4) {
-      target = approx;
-      break;
-    }
-  }
-
-  // cout << target << endl;
-
-  Mat hnew = Mat::zeros(4, 2, CV_32F);
-  Mat reshaped_h = target.reshape(0, 4);
-
-  // Yeah, the reduce sum function is not wanna work so we do it manually for now
-  Mat add(1, 4, CV_32F);
-  add.col(0) = target.at<int>(0,0) + target.at<int>(0,1);
-  add.col(1) = target.at<int>(1,0) + target.at<int>(1,1);
-  add.col(2) = target.at<int>(2,0) + target.at<int>(2,1);
-  add.col(3) = target.at<int>(3,0) + target.at<int>(3,1);
-
-  Mat diff(1, 4, CV_32F);
-  diff.col(0) = target.at<int>(0,1) - target.at<int>(0,0);
-  diff.col(1) = target.at<int>(1,1) - target.at<int>(1,0);
-  diff.col(2) = target.at<int>(2,1) - target.at<int>(2,0);
-  diff.col(3) = target.at<int>(3,1) - target.at<int>(3,0);
+  Mat target = getContours(imgedges);
+  Mat approx = unwarp(target);
 
 
-  // cout << add << endl;
-  // cout << diff << endl;
-
-  Point min_add, max_add, min_diff, max_diff;
-  minMaxLoc(add, nullptr, nullptr, &min_add, &max_add);
-  minMaxLoc(diff, nullptr, nullptr, &min_diff, &max_diff);
-
-  // cout << target << endl;
-
-  hnew.row(0) = reshaped_h.row(min_add.y);
-  hnew.row(2) = reshaped_h.row(max_add.y);
-  hnew.row(1) = reshaped_h.row(min_diff.y);
-  hnew.row(3) = reshaped_h.row(max_diff.y);
-
-  hnew.row(0) = target.row(min_add.x);
-  hnew.row(2) = reshaped_h.row(max_add.y);
-  hnew.row(1) = reshaped_h.row(min_diff.y);
-  hnew.row(3) = reshaped_h.row(max_diff.y);
-
-  // Mat uw_target = unwarp(target);
-  // cout << hnew << endl;
-
-  // return make_pair(unwarp(target), target);
+  cout << target << endl;
+  cout << approx << endl;
 
 
   Size resolution = getResolution(target);
@@ -259,17 +215,25 @@ int main(int argc, char* argv[]) {
     resolution.width, resolution.height,
     0, resolution.height
   );
-  Mat targetWarp;
-  target.convertTo(targetWarp, CV_32F);
-  Mat M = getPerspectiveTransform(targetWarp, persptransform);
+  Mat m32f_approx;
+  approx.convertTo(m32f_approx, CV_32F);
+  Mat M = getPerspectiveTransform(m32f_approx, persptransform);
   Mat imgout;
   warpPerspective(image, imgout, M, resolution);
 
 
-  drawContours(image, target, -1, Scalar(0, 255, 0), 4);
+  drawContours(image, target, -1, Scalar(0, 255, 0), 4);  // draws only four dots :/
+  int n = target.rows;
+  for(int i = 0 ; i < n ; i++) {
+    cv::line(
+      image, 
+      cv::Point(target.at<int>(i,0), target.at<int>(i,1)), 
+      cv::Point(target.at<int>((i+1) % n,0), target.at<int>((i+1) % n,1)), 
+      cv::Scalar(0, 255, 0), 2
+    );
+  }
 
-
-  imshow(args.winName, image);
+  imshow(args.winName, imgout);
   waitKey(0);
   return EXIT_SUCCESS;
 }
