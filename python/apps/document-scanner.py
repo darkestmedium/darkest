@@ -1,6 +1,6 @@
 # Built-in imports
-import sys
 import os
+import sys; sys.path.append(f"/home/{os.getlogin()}/Dropbox/code/darkest/")
 import argparse
 import math
 import logging
@@ -168,14 +168,6 @@ if __name__ == "__main__":
 
   print(width, height)
   print(persptrans)
-  # key = cv2.waitKey(1)
-  # match key:
-  #   case 99:  # c is pressed
-  #     log.debug(f"Key pressed: {key}")
-  #   case 27:  # esc is pressed 
-  #     break
-  #   case _: # esc is pressed 
-  #     log.debug(f"Key pressed: {key}")
   
   cv2.imshow(args.winName, image)
 

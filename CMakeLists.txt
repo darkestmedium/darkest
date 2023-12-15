@@ -38,12 +38,10 @@ endfunction()
 ## Create the final executable
 # add_executable(oa cpp/apps/main.cpp)
 
-
 ## Link the libraries to the executable
 # target_link_libraries(oa ${OpenCV_LIBS})
 # include_directories(oa ${OpenCV_INCLUDE_DIRS})
 # include_directories(${OpenCV_INCLUDE_DIRS})
-
 
 # Templates
 # add_app("cpp/camera" "camera" "main.cpp")
@@ -55,7 +53,8 @@ endfunction()
 # add_app("cpp/panorama-stiching" "panorama-stiching" "main.cpp")
 # add_app("cpp/morphology" "morphology" "main.cpp")
 # add_app("cpp/image-alignment" "image-alignment" "main.cpp")
-add_app("cpp/document-scanner" "document-scanner" "main.cpp")
+# add_app("cpp/document-scanner" "document-scanner" "main.cpp")
 # add_app("cpp/ig-filters" "ig-filters" "main.cpp")
 # add_app("cpp/chroma-keying" "chroma-keying" "main.cpp")
 # add_app("cpp/blemish-removal" "blemish-removal" "main.cpp")
+add_app("cpp/dji-fpv" "dji-fpv" "main.cpp")

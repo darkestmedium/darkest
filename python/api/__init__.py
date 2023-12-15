@@ -21,17 +21,17 @@ import api.Darkest
 import api.DarkestUi
 
 
-# Resources file paths
-# try:
-fihome = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.HomeLocation)
-fidesktop = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DesktopLocation)
-fidownload = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DownloadLocation)
-fidocuments = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DocumentsLocation)
-# Integrate into open api? will be heavy but it is a crucial dependency
-firesources = qtc.QFileInfo("resources/")
-fids = qtc.QFileInfo("resources/ds/")
-fiml = qtc.QFileInfo("resources/ml/")
-fimlmodels = qtc.QFileInfo("resources/ml/models/")
+# # Resources file paths
+# # try:
+# fihome = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.HomeLocation)
+# fidesktop = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DesktopLocation)
+# fidownload = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DownloadLocation)
+# fidocuments = qtc.QStandardPaths.writableLocation(qtc.QStandardPaths.DocumentsLocation)
+# # Integrate into open api? will be heavy but it is a crucial dependency
+# firesources = qtc.QFileInfo("resources/")
+# fids = qtc.QFileInfo("resources/ds/")
+# fiml = qtc.QFileInfo("resources/ml/")
+# fimlmodels = qtc.QFileInfo("resources/ml/models/")
 
 
 

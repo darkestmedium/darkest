@@ -1,6 +1,7 @@
 # Built-in imports
 # import json
-import sys; sys.path.append("/Users/luky/Dropbox/dev")
+import os
+import sys; sys.path.append(f"/home/{os.getlogin()}/Dropbox/code/darkest/python")
 
 # Third-party imports
 from api import qtc
@@ -14,7 +15,7 @@ from tensorflow import keras as tfk
 
 # Open APi imports
 from api import fimlmodels
-import api.Darkest as oa
+import api.Darkest as da
 
 
 (x_train, _), (x_test, _) = tfk.datasets.fashion_mnist.load_data()
@@ -40,13 +41,13 @@ x_test_noisy = tf.clip_by_value(x_test_noisy, clip_value_min=0.0, clip_value_max
 class DenoiseAE(tfk.Model):
 	"""Autoencoder for denoising animation data.
 	"""
-	fimodel = qtc.QFileInfo(f"/Users/luky/Dropbox/dev/dnn/models/")
+	fimodel = qtc.QFileInfo(f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/ml/models")
 
 
 	# Constructor
 	def __init__(self, inputs:int=28, name:str="DenoiseAE", **kwargs):
 		super(DenoiseAE, self).__init__(name=name, **kwargs)
-		self.weights_path(qtc.QFileInfo(f"/Users/luky/Dropbox/dev/dnn/models/{self.name}/"))
+		self.weights_path(qtc.QFileInfo(f"/home/{os.getlogin()}/Dropbox/darkest/resources/models/{self.name}/"))
 		inputs2 = inputs // 2
 		inputs3 = inputs // 4
 		self.encoder = tf.keras.Sequential(
@@ -87,7 +88,7 @@ class DenoiseAE(tfk.Model):
 
 	def weights_path(self, fimodel):
 		DenoiseAE.fimodel = fimodel
-		oa.FileIO.mkdir(fimodel.absoluteFilePath())
+		da.iofile.mkdir(fimodel.absoluteFilePath())
 
 
 
@@ -96,7 +97,7 @@ if __name__ == "__main__":
 	autoencoder = DenoiseAE()
 	# EPOCHS = 10
 	checkpoint_filepath = f'{autoencoder.fimodel.absoluteFilePath()}checkpoints/'
-	oa.FileIO.mkdir(checkpoint_filepath)
+	da.iofile.mkdir(checkpoint_filepath)
 	cp_callback = tf.keras.callbacks.ModelCheckpoint(
 		filepath=checkpoint_filepath,
 		monitor='accuracy',
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 	)
 
 	model = tfk.models.load_model(
-		"/Users/luky/Dropbox/dev/dnn/models/DenoiseAE/DenoiseAE.keras",
+		f"/home/{os.getlogin()}/Dropbox/darkest/resources/ml/models/DenoiseAE/DenoiseAE.keras",
 		compile=True,
 	)
 	model.summary()

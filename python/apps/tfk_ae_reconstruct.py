@@ -5,7 +5,6 @@ import sys; sys.path.append("/Users/luky/Dropbox/code/oa/python")
 # Third-party imports
 from api import np
 from api import qtc
-from api import np
 from api import cv2
 
 import matplotlib.pyplot as plt
@@ -69,7 +68,7 @@ class DNN(tfk.Model):
 class ReconstructAE(DNN):
 	fimodel = ...
 	fimodelcp = ...
-	
+
 	def __init__(self, latent_dim, shape, name:str="tfk_ae_reconstruct", **kwargs):
 		super(ReconstructAE, self).__init__(name=name, **kwargs)
 		ReconstructAE.fimodel = qtc.QFileInfo(f"{fimlmodels.absoluteFilePath()}{name}/")
@@ -90,9 +89,9 @@ class ReconstructAE(DNN):
 		self.decoder = tf.keras.Sequential(
 			name="Decoder",
 			layers=[
-			tfk.layers.Input((latent_dim,)),
-			tfk.layers.Dense(tf.math.reduce_prod(shape), activation='sigmoid'),
-			tfk.layers.Reshape(shape)
+        tfk.layers.Input((latent_dim,)),
+        tfk.layers.Dense(tf.math.reduce_prod(shape), activation='sigmoid'),
+        tfk.layers.Reshape(shape)
 			]
 		)
 
@@ -119,7 +118,6 @@ class ReconstructAE(DNN):
 
 
 if __name__ == "__main__":
-
 	shape = x_test.shape[1:]
 	latent_dim = 1024
 	autoencoder = ReconstructAE(latent_dim, shape)
@@ -145,7 +143,6 @@ if __name__ == "__main__":
 		f"{autoencoder.fimodel.filePath()}{autoencoder.name}.keras",
 		overwrite=True,
 	)
-
 
 	model = tfk.models.load_model(
 		f"{fimlmodels.filePath()}ReconstructAE/ReconstructAE.keras",

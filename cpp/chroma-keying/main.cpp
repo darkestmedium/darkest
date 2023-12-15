@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
   setMouseCallback(args.winName, lmb, &data);
   createTrackbar("Softness", args.winName, 0, 100, softness, &data);
 
-  
+
 
   // Read until video is completed
   while(cap.isOpened()) {
