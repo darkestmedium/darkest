@@ -11,7 +11,6 @@ project(oa VERSION 0.1.0 DESCRIPTION "The OA")
 
 set(CMAKE_CXX_STANDARD 23)  # Required on mac
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
-# set(CMAKE_MoODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cgcmake/modules)
 
 
 # Find packages
@@ -19,12 +18,6 @@ find_package(OpenCV REQUIRED)
 
 # Add subdirectories recursively
 add_subdirectory(cpp/api)
-
-
-# Build the maya plugin
-# if (${BUILD_MAYA})
-#   add_subdirectory(cpp/maya)
-# endif()
 
 
 function(add_app base_dir tgt_name)
@@ -44,7 +37,7 @@ endfunction()
 # include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Templates
-# add_app("cpp/camera" "camera" "main.cpp")
+add_app("cpp/camera" "camera" "main.cpp")
 # add_app("cpp/image" "image" "main.cpp")
 # add_app("cpp/video" "video" "main.cpp")
 
@@ -57,4 +50,4 @@ endfunction()
 # add_app("cpp/ig-filters" "ig-filters" "main.cpp")
 # add_app("cpp/chroma-keying" "chroma-keying" "main.cpp")
 # add_app("cpp/blemish-removal" "blemish-removal" "main.cpp")
-add_app("cpp/dji-fpv" "dji-fpv" "main.cpp")
+# add_app("cpp/dji-fpv" "dji-fpv" "main.cpp")
