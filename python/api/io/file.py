@@ -109,10 +109,13 @@ class FileIO():
 		fileInfo = qtc.QFileInfo(path)
 		list_fi = []
 		if fileInfo.isDir():
-			iter = qtc.QDirIterator(fileInfo.absolutePath(), nameFilters, filters, includeSubDirectories)
+			iter = qtc.QDirIterator(fileInfo.absoluteFilePath(), nameFilters, filters, includeSubDirectories)
 			while iter.hasNext():
 				iter.next()
-				list_fi.append(iter.fileInfo())
+				fi = iter.fileInfo()
+				if fi.fileName() == "." or fi.fileName() == "..": continue ## don't include iterator up / back 
+				list_fi.append(fi)
+	
 		return list_fi
 
 

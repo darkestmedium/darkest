@@ -18,7 +18,7 @@ class iofile(aif.FileIO):
 
 
 class iodata(aid.DataIO):
-	"""Import wrapper for the api.io.file.FileIO class.
+	"""Import wrapper for the api.io.data.FileIO class.
 	"""
 
 

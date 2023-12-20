@@ -133,6 +133,7 @@ def plot_value_array(i, predictions_array, true_label):
 
 
 if __name__ == "__main__":
+
   mlp = MLP()
   mlp.compile(
     optimizer='adam',
