@@ -37,7 +37,7 @@ class DNN(tfk.Model):
       save_best_only=best,
       verbose=1,
     )
-  
+
 
   def call(self, inputs):
     """Custom call method."""

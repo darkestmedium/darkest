@@ -156,7 +156,7 @@ if __name__ == "__main__":
   model.summary()
 
   # Plot Loss
-  plt.figure(figsize=[15,5])
+  plt.figure(figsize=[15, 5])
   plt.plot(history.history['loss'], 'g')
   plt.plot(history.history['val_loss'], 'b')
 

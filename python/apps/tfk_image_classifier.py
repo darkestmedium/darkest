@@ -4,12 +4,14 @@ import sys; sys.path.append(f"/home/{os.getlogin()}/Dropbox/code/darkest/python"
 import random
 import argparse
 import platform
+import math
 
 # Third-party imports
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator 
 
 from dataclasses import dataclass
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
 # Darkest APi imports
 from api import np
@@ -74,38 +76,14 @@ fi_test, fi_train, fi_valid = da.iofile.listdir(fi_root.absoluteFilePath(), ["*"
 train_classes = da.iofile.listdir(fi_train.absoluteFilePath(), ["*"], filters=qtc.QDir.Dirs, includeSubDirectories=qtc.QDirIterator.NoIteratorFlags)
 valid_classes = da.iofile.listdir(fi_valid.absoluteFilePath(), ["*"], filters=qtc.QDir.Dirs, includeSubDirectories=qtc.QDirIterator.NoIteratorFlags)
 
-
-print(fi_root.fileName())
-print(f"    {fi_test.fileName()}")
-print(f"    {fi_train.fileName()}")
-[print(f"        {fi.fileName()}") for fi in train_classes]
-print(f"    {fi_valid.fileName()}")
-[print(f"        {fi.fileName()}") for fi in valid_classes]
-print("\n")
-print("Training Classes:")
-[print(f"{fi.fileName()}") for fi in train_classes]
-print("\n")
-print("Validation Classes:")
-[print(f"{fi.fileName()}") for fi in valid_classes]
-
-
 train_images = da.iofile.listdir(fi_train.absoluteFilePath())
 valid_images = da.iofile.listdir(fi_valid.absoluteFilePath())
-
-print(f"{bold}Number of Training samples: {end}{train_images.__len__()}")
-print(f"{bold}Number of Validation samples: {end}{valid_images.__len__()}")
-
 
 # Train Images
 fi_train_cow = da.iofile.listdir(train_classes[0].absoluteFilePath())
 fi_train_elephant = da.iofile.listdir(train_classes[1].absoluteFilePath())
 fi_train_horse = da.iofile.listdir(train_classes[2].absoluteFilePath())
 fi_train_spider = da.iofile.listdir(train_classes[3].absoluteFilePath())
-
-print(f"Train cow images: {fi_train_cow.__len__()}")
-print(f"Train elephant images: {fi_train_elephant.__len__()}")
-print(f"Train horse images: {fi_train_horse.__len__()}")
-print(f"Train spider images: {fi_train_spider.__len__()}")
 
 # Valid Images
 fi_valid_cow = da.iofile.listdir(train_classes[0].absoluteFilePath())
@@ -114,18 +92,36 @@ fi_valid_horse = da.iofile.listdir(train_classes[2].absoluteFilePath())
 fi_valid_spider = da.iofile.listdir(train_classes[3].absoluteFilePath())
 
 
-def show_image(image_path, label):
+# print(fi_root.fileName())
+# print(f"    {fi_test.fileName()}")
+# print(f"    {fi_train.fileName()}")
+# [print(f"        {fi.fileName()}") for fi in train_classes]
+# print(f"    {fi_valid.fileName()}")
+# [print(f"        {fi.fileName()}") for fi in valid_classes]
+# print("\n")
+# print("Training Classes:")
+# [print(f"{fi.fileName()}") for fi in train_classes]
+# print("\n")
+# print("Validation Classes:")
+# [print(f"{fi.fileName()}") for fi in valid_classes]
 
-  img = cv.imread(image_path)
-  height, width, channels = img.shape
+# print(f"{bold}Number of Training samples: {end}{train_images.__len__()}")
+# print(f"{bold}Number of Validation samples: {end}{valid_images.__len__()}")
 
-  plt.imshow(img)
-  plt.title(f"image size: ({width} x {height}, {channels}), target: {label}")
-  plt.axis("off")
-  plt.show()
+# print(f"Train cow images: {fi_train_cow.__len__()}")
+# print(f"Train elephant images: {fi_train_elephant.__len__()}")
+# print(f"Train horse images: {fi_train_horse.__len__()}")
+# print(f"Train spider images: {fi_train_spider.__len__()}")
 
 
+# def show_image(image_path, label):
+#   img = cv.imread(image_path)
+#   height, width, channels = img.shape
 
+#   plt.imshow(img)
+#   plt.title(f"image size: ({width} x {height}, {channels}), target: {label}")
+#   plt.axis("off")
+#   plt.show()
 
 # target = "cow"
 # show_image(fi_train_cow[99].absoluteFilePath(), train_classes[0].fileName())
@@ -141,8 +137,60 @@ def show_image(image_path, label):
 
 
 
+def _bytes_feature(value):
+  """Returns a bytes_list from a string / byte."""
+  # Convert float to uint8
+  value = tf.image.convert_image_dtype(value[0], dtype=tf.uint8)
+  # Serialize the image tensor to bytes
+  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.encode_jpeg(value).numpy()]))
 
-def data_augmentation_preprocess():
+def _int64_feature(value):
+  """Returns an int64_list from a bool / enum / int / uint."""
+  # If the value is a tensor, convert it to a scalar using numpy()
+  if tf.is_tensor(value):
+    value = value.numpy()
+  # Convert the value to a Python list if it's a NumPy array
+  if isinstance(value, np.ndarray):
+    value = value.flatten().tolist()
+  # Ensure that the value is a scalar or a list of integers
+  if not isinstance(value, list):
+    value = [int(value)]
+  # Create an Int64List feature
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+
+def serialize_example(image, label):
+  feature = {
+    'image': _bytes_feature(image),
+    'label': _int64_feature(label),
+  }
+  example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
+  return example_proto.SerializeToString()
+
+def write_tfrecord(dataset, output_file):
+  with tf.io.TFRecordWriter(output_file) as writer:
+    for image, label in dataset:
+      # Assuming 'image' is a NumPy array and 'label' is an integer
+      tf_example = serialize_example(image, label)
+      writer.write(tf_example)
+
+def parse_tfrecord(example_proto):
+  feature_description = {
+    'image': tf.io.FixedLenFeature([], tf.string),
+    'label': tf.io.FixedLenFeature([], tf.int64),
+  }
+  example = tf.io.parse_single_example(example_proto, feature_description)
+  image = tf.io.decode_jpeg(example['image'])
+  label = example['label']
+  return image, label
+
+def read_tfrecord(tfrecord_file):
+  raw_dataset = tf.data.TFRecordDataset(tfrecord_file)
+  parsed_dataset = raw_dataset.map(parse_tfrecord)
+  return parsed_dataset
+
+
+
+def dataset_augmentation():
   """Combines multiple augmentations in a single processing pipeline.
 
   Reference:
@@ -156,13 +204,13 @@ def data_augmentation_preprocess():
     tfk.layers.RandomZoom(0.2),
     tfk.layers.RandomContrast(0.2),
     tfk.layers.RandomBrightness(0.2),
-    tfk.layers.Rescaling(1./255)
+    # tfk.layers.Rescaling(1./255)
   ])
 
 
 
 
-def get_data(fi_train, fi_valid, target_size=(224, 224), batch_size=32, data_augmentation=False):
+def get_data(fi_train, fi_valid, output, target_size=(224, 224), batch_size=32, data_augmentation=True):
 
   train_dataset = tfk.utils.image_dataset_from_directory(
     fi_train.absoluteFilePath(), 
@@ -170,36 +218,35 @@ def get_data(fi_train, fi_valid, target_size=(224, 224), batch_size=32, data_aug
     color_mode='rgb', 
     batch_size=batch_size, 
     image_size=target_size, 
-    shuffle=True,
   )
 
   valid_dataset = tfk.utils.image_dataset_from_directory(
     fi_valid.absoluteFilePath(), 
     label_mode='categorical',
     color_mode='rgb', 
-    batch_size=batch_size, 
-    image_size=target_size, 
-    shuffle=False, 
+    batch_size=batch_size,
+    image_size=target_size,
   )
   
   if data_augmentation: 
-    data_augmentation_pipeline = data_augmentation_preprocess()
-    train_dataset = train_dataset.map(lambda x, y: (data_augmentation_pipeline(x), y))
-    valid_dataset = valid_dataset.map(lambda x, y: (data_augmentation_pipeline(x), y))
+    dts_augmentation = dataset_augmentation()
+    train_dataset = train_dataset.map(lambda x, y: (dts_augmentation(x), y))
+    valid_dataset = valid_dataset.map(lambda x, y: (dts_augmentation(x), y))
 
-  train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)    
+  train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
   valid_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
+  # # Write train dataset to TFRecord
+  # train_tfrecord_path = os.path.join(output, "train_dataset.tfrecord")
+  # write_tfrecord(train_dataset, train_tfrecord_path)
+
+  # # Write valid dataset to TFRecord
+  # valid_tfrecord_path = os.path.join(output, "valid_dataset.tfrecord")
+  # write_tfrecord(valid_dataset, valid_tfrecord_path)
+
   return train_dataset, valid_dataset
+  # return train_tfrecord_path, valid_tfrecord_path
 
-
-# train_dataset, valid_dataset = get_data(fi_train, fi_valid)
-# # Extract a batch of images and labels from the dataset
-# for images, labels in train_dataset.take(1):
-#   # Display the first image from the batch
-#   plt.imshow(images[0].numpy().astype("uint8"))
-#   plt.title(f"Label: {labels[0].numpy()}")
-#   plt.show()
 
 
 
@@ -214,9 +261,6 @@ class TrainingConfig:
   # This approach helps in efficient utilization of the computational power of all the devices involved in training.
   BATCH_SIZE: int = 4 * DISTRIBUTE_STRATEGY.num_replicas_in_sync
 
-  EPOCHS: int = 2
-  LEARNING_RATE: float = 0.1
-
   # For tensorboard logging and saving checkpoints
   root_log_dir = os.path.join("Logs_Checkpoints", "Model_logs")
   root_checkpoint_dir = os.path.join("Logs_Checkpoints", "Model_checkpoints")
@@ -224,12 +268,6 @@ class TrainingConfig:
   # Current log and checkpoint directory.
   log_dir = "version_0"
   checkpoint_dir = "version_0"
-
-  # Use multiprocessing during training.
-  use_multiprocessing: bool = True if platform.system() == "Linux" else False
-      
-  # Number of workers to use for training.
-  num_workers: int = 4
 
 
 
@@ -344,13 +382,6 @@ def plot_history(
 
 
 
-
-
-
-
-
-
-
 @tfk.saving.register_keras_serializable()
 class Classifier4(daml.dnnmodel):
   """Autoencoder for denoising animation data.
@@ -366,36 +397,31 @@ class Classifier4(daml.dnnmodel):
     Classifier4.fimodelcp = qtc.QFileInfo(f"{Classifier4.fimodel.absoluteFilePath()}checkpoint/")
     [da.iofile.mkdir(fi.absoluteFilePath()) for fi in [Classifier4.fimodel, Classifier4.fimodelcp]]  # Create paths -.-
 
-    self.model = tfk.Sequential(
-      name=name,
+    self.sequential = tfk.Sequential(
+      name="Sequential",
       layers=[
-        tfk.Input(shape=input_shape),
-        tfk.layers.Rescaling(1./255),
+        tfk.layers.Rescaling(1./255, input_shape=input_shape),
 
-        tfk.layers.Conv2D(8, 3, activation="relu"),
-        tfk.layers.BatchNormalization(),
-        tfk.layers.MaxPooling2D(pool_size=(2, 2)),
+        tfk.layers.Conv2D(16, 3, activation="relu", padding="same"),
+        tfk.layers.MaxPooling2D(),
 
-        tfk.layers.Conv2D(16, 3, activation="relu"),
-        tfk.layers.BatchNormalization(),
-        tfk.layers.MaxPooling2D(pool_size=(2, 2)),
+        tfk.layers.Conv2D(32, 3, activation="relu", padding="same"),
+        tfk.layers.MaxPooling2D(),
 
-        tfk.layers.Conv2D(32, 3, activation="relu"),
-        tfk.layers.BatchNormalization(),
-        tfk.layers.MaxPooling2D(pool_size=(2, 2)),
-
-        tfk.layers.Conv2D(64, 3, activation="relu"),
-        tfk.layers.BatchNormalization(),
-        tfk.layers.MaxPooling2D(pool_size=(2, 2)),
+        tfk.layers.Conv2D(64, 3, activation="relu", padding="same"),
+        tfk.layers.MaxPooling2D(),
 
         tfk.layers.Flatten(),
+
+        tfk.layers.Dense(128, activation="relu"),
         tfk.layers.Dense(num_classes, activation="softmax")
-    ])
+      ]
+    )
 
 
   def call(self, inputs):
     """Custom call method."""
-    return self.model(inputs)
+    return self.sequential(inputs)
 
 
   def train(self, train_dts, validation_dts, callbacks=None, epochs:int=10, batch_size=32, multithreading:bool=True, workers:int=1):
@@ -414,9 +440,56 @@ class Classifier4(daml.dnnmodel):
 
 
 
+def get_sample_predictions(*, model, dataset, total=15):
+
+  imgs = []
+  ground_truths = []
+  probs = []
+  predictions = []
+
+  idx_to_cls = {0: "cow", 1: "elephant", 2: "horse", 3: "spider"}
+
+  print("Generating Predictions...")
+  for data, target in dataset:
+    model_predictions = model.predict_on_batch(data)
+    cls_predicted = np.argmax(model_predictions, axis=-1)
+    cls_probs = np.max(model_predictions, axis=-1)
+
+    imgs.extend(data.numpy() / 255.)
+    ground_truths.extend(target.numpy())
+    predictions.extend(cls_predicted)
+    probs.extend(cls_probs)
+    
+    # Displaying only 15 images 
+    if data.shape[0] >= total: 
+      break
+
+  plt.style.use("default")
+  plt.rcParams["figure.figsize"] = (18, 9)
+  fig = plt.figure()
+  fig.set_facecolor("white")
+
+  for idx in range(total):
+    plt.subplot(3, 5, idx + 1)
+    img = imgs[idx]
+    plt.imshow(img)
+
+    plt.title(f"P:{idx_to_cls[predictions[idx]]}({probs[idx]:.2}), T:{idx_to_cls[ground_truths[idx]]}")
+    plt.axis("off")
+
+  fig.savefig("sample_predictions.png")
+  plt.show(block=block_plot)
+  
+  del imgs, ground_truths, probs, predictions
+  return
 
 
 
+
+def lr_schedule(epoch, initial_lr=0.01):
+  drop = 0.5
+  epochs_drop = 10
+  return initial_lr * math.pow(drop, math.floor((1 + epoch) / epochs_drop))
 
 
 
@@ -425,7 +498,13 @@ def syntax_creator():
   """
   parser = argparse.ArgumentParser()
   parser.add_argument("-fp", "--filePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/ml/models/", help="Path to the model file and checkpoint.")
-  parser.add_argument("-wn", "--winName", type=str, default="OpenCV Window - GTK", help="Name of the opencv window.")
+  parser.add_argument("-dfp", "--datasetFilePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/ml/models/", help="Path to the model file and checkpoint.")
+  parser.add_argument("-ts", "--targetSize", type=tuple, default=(256, 256, 3), help="Target size.")
+  parser.add_argument("-ep", "--epochs", type=int, default=1, help="Number of epochs to train for.")
+  parser.add_argument("-lr", "--learningRate", type=float, default=0.005, help="Learning rate.")
+  parser.add_argument("-bs", "--batchSize", type=int, default=4*DISTRIBUTE_STRATEGY.num_replicas_in_sync, help="Batch size.")
+  parser.add_argument("-mp", "--multiProcessing", type=bool, default=True if platform.system()=="Linux" else False, help="Wheter or not to use multi threading.")
+  parser.add_argument("-now", "--numberOfWorkers", type=int, default=4, help="Number of workers to use for training.")
   return parser.parse_args()
 
 
@@ -436,100 +515,61 @@ if __name__ == "__main__":
 
   # Get training and validation datasets
   train_dataset, valid_dataset = get_data(
-    fi_train,
-    fi_valid,
+    fi_train, fi_valid, fi_root.absoluteFilePath(),
     target_size=DatasetConfig.DATA_SHAPE[:2],
-    batch_size=TrainingConfig.BATCH_SIZE,
-    data_augmentation=DatasetConfig,
+    batch_size=args.batchSize,
+    # data_augmentation=DatasetConfig,
+    data_augmentation=True,
   )
-
-  for images, labels in valid_dataset:
-    print("X Shape:", images.shape, "Y Shape:", labels.shape)
-    break
-
-  # class4 = Classifier4()
 
 
   # Start a context manager using the distributed strategy previously defined.
   # This scope ensures that the operations defined within it are distributed across the available devices as per the strategy.
   with DISTRIBUTE_STRATEGY.scope():
     # Get the model by calling the 'get_model' function.
-    model = Classifier4(args.filePath, num_classes=DatasetConfig.NUM_CLASSES, input_shape=DatasetConfig.DATA_SHAPE)
+    model = Classifier4(args.filePath, num_classes=DatasetConfig.NUM_CLASSES, input_shape=args.targetSize)
     # Compile the model. This step configures the model for training
     # 'loss' is set to 'categorical_crossentropy', which is a common choice for classification tasks.
     # 'optimizer' is an Adam optimizer with a specific learning rate from the training configuration.
     # 'metrics' is a list of metrics to be evaluated by the model during training and testing, here it's set to track 'accuracy'.
     model.compile(
-      optimizer=tfk.optimizers.Adam(learning_rate=TrainingConfig.LEARNING_RATE),
+      optimizer=tfk.optimizers.Adam(learning_rate=args.learningRate),
+      loss=tfk.losses.CategoricalCrossentropy(),
       # loss=tfk.losses.SparseCategoricalCrossentropy(from_logits=True),
-      loss="categorical_crossentropy",
       metrics=['accuracy']
     )
+
 
 
   history = model.train(
     train_dts=train_dataset,
     validation_dts=valid_dataset,
-    epochs=TrainingConfig.EPOCHS,
-    callbacks=model.cb_checkpoint(),
-    workers=TrainingConfig.num_workers,
-    multithreading=TrainingConfig.use_multiprocessing
-
+    epochs=args.epochs,
+    callbacks=[
+      model.cb_checkpoint(),
+      tfk.callbacks.LearningRateScheduler(lr_schedule)
+    ],
+    multithreading=args.multiProcessing,
+    batch_size=args.batchSize,
+    workers=args.numberOfWorkers,
   )
 
-  model.save(
-    f"{model.fimodel.filePath()}{model.name}.keras",
-    overwrite=True
+  model.save(f"{model.fimodel.filePath()}{model.name}.keras", overwrite=True)
+  tfk.utils.plot_model(model.sequential, to_file="model.png", show_shapes=True)
+
+  # Reload
+  model_reloaded = tfk.models.load_model(f"{model.fimodel.filePath()}/{model.name}.keras", compile=True)
+  model_reloaded.sequential.summary()
+
+
+
+  valid_dataset = tfk.utils.image_dataset_from_directory(
+    fi_valid.absoluteFilePath(), 
+    label_mode='int',
+    color_mode='rgb', 
+    batch_size=args.batchSize, 
+    image_size=DatasetConfig.DATA_SHAPE[:2], 
+    shuffle=True, # shuffling to show images from all classes
   )
-  model.summary()
+  get_sample_predictions(model=model_reloaded, dataset=valid_dataset)
 
-  model = tfk.models.load_model(f"{model.fimodel.filePath()}/{model.name}.keras", compile=True)
-  model.summary()
-
-
-  # Plot Loss
-  plt.figure(figsize=[15,5])
-  plt.plot(history.history['loss'], 'g')
-  plt.plot(history.history['val_loss'], 'b')
-
-  plt.xlabel('Epochs')
-  plt.ylabel('Loss')
-
-  plt.legend(['Training', 'Validation'], loc='upper right')
-  plt.grid(True)
-
-  # Plot Accuracy
-  plt.figure(figsize=[15,5])
-  plt.plot(history.history['accuracy'], 'g')
-  plt.plot(history.history['val_accuracy'], 'b')
-
-  plt.ylim([0.5, 1])
-
-  plt.xlabel('Epochs')
-  plt.ylabel('Acc')
-
-  plt.legend(['Training', 'Validation'], loc='lower right')
-  plt.grid(True)
-
-  plt.show()
-
-
-  # probability_model = tf.keras.Sequential([model, tfk.layers.Softmax()])
-  # predictions = probability_model.predict(test_images)
-  # predictions[0]
-  # np.argmax(predictions[0])
-
-
-  # # Plot the first X test images, their predicted labels, and the true labels.
-  # # Color correct predictions in blue and incorrect predictions in red.
-  # num_rows = 5
-  # num_cols = 3
-  # num_images = num_rows*num_cols
-  # plt.figure(figsize=(2*2*num_cols, 2*num_rows))
-  # for i in range(num_images):
-  #   plt.subplot(num_rows, 2*num_cols, 2*i+1)
-  #   plot_image(i, predictions[i], test_labels, test_images)
-  #   plt.subplot(num_rows, 2*num_cols, 2*i+2)
-  #   plot_value_array(i, predictions[i], test_labels)
-  # plt.tight_layout()
-  # plt.show()
