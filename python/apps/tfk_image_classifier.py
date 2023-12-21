@@ -166,16 +166,7 @@ def get_data(fi_train, fi_valid, output, target_size=(224, 224), batch_size=32, 
   train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
   valid_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
-  # # Write train dataset to TFRecord
-  # train_tfrecord_path = os.path.join(output, "train_dataset.tfrecord")
-  # write_tfrecord(train_dataset, train_tfrecord_path)
-
-  # # Write valid dataset to TFRecord
-  # valid_tfrecord_path = os.path.join(output, "valid_dataset.tfrecord")
-  # write_tfrecord(valid_dataset, valid_tfrecord_path)
-
   return train_dataset, valid_dataset
-  # return train_tfrecord_path, valid_tfrecord_path
 
 
 
