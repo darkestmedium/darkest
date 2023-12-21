@@ -13,8 +13,6 @@ import api.Darkest as da
 
 
 
-
-
 @tfk.saving.register_keras_serializable()
 class DNN(tfk.Model):
   """Keras Model subclass wrapper with convinience methods.

@@ -137,76 +137,6 @@ fi_valid_spider = da.iofile.listdir(train_classes[3].absoluteFilePath())
 
 
 
-def _bytes_feature(value):
-  """Returns a bytes_list from a string / byte."""
-  # Convert float to uint8
-  value = tf.image.convert_image_dtype(value[0], dtype=tf.uint8)
-  # Serialize the image tensor to bytes
-  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[tf.io.encode_jpeg(value).numpy()]))
-
-def _int64_feature(value):
-  """Returns an int64_list from a bool / enum / int / uint."""
-  # If the value is a tensor, convert it to a scalar using numpy()
-  if tf.is_tensor(value):
-    value = value.numpy()
-  # Convert the value to a Python list if it's a NumPy array
-  if isinstance(value, np.ndarray):
-    value = value.flatten().tolist()
-  # Ensure that the value is a scalar or a list of integers
-  if not isinstance(value, list):
-    value = [int(value)]
-  # Create an Int64List feature
-  return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
-
-def serialize_example(image, label):
-  feature = {
-    'image': _bytes_feature(image),
-    'label': _int64_feature(label),
-  }
-  example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
-  return example_proto.SerializeToString()
-
-def write_tfrecord(dataset, output_file):
-  with tf.io.TFRecordWriter(output_file) as writer:
-    for image, label in dataset:
-      # Assuming 'image' is a NumPy array and 'label' is an integer
-      tf_example = serialize_example(image, label)
-      writer.write(tf_example)
-
-def parse_tfrecord(example_proto):
-  feature_description = {
-    'image': tf.io.FixedLenFeature([], tf.string),
-    'label': tf.io.FixedLenFeature([], tf.int64),
-  }
-  example = tf.io.parse_single_example(example_proto, feature_description)
-  image = tf.io.decode_jpeg(example['image'])
-  label = example['label']
-  return image, label
-
-def read_tfrecord(tfrecord_file):
-  raw_dataset = tf.data.TFRecordDataset(tfrecord_file)
-  parsed_dataset = raw_dataset.map(parse_tfrecord)
-  return parsed_dataset
-
-
-
-def dataset_augmentation():
-  """Combines multiple augmentations in a single processing pipeline.
-
-  Reference:
-    https://www.tensorflow.org/tutorials/images/data_augmentation#data_augmentation_2
-
-  """
-  return tfk.Sequential([
-    tfk.layers.RandomFlip("horizontal"),
-    tfk.layers.RandomFlip("vertical"),
-    tfk.layers.RandomRotation(0.2),
-    tfk.layers.RandomZoom(0.2),
-    tfk.layers.RandomContrast(0.2),
-    tfk.layers.RandomBrightness(0.2),
-    # tfk.layers.Rescaling(1./255)
-  ])
-
 
 
 
@@ -229,7 +159,7 @@ def get_data(fi_train, fi_valid, output, target_size=(224, 224), batch_size=32, 
   )
   
   if data_augmentation: 
-    dts_augmentation = dataset_augmentation()
+    dts_augmentation = da.iodata.augmentation()
     train_dataset = train_dataset.map(lambda x, y: (dts_augmentation(x), y))
     valid_dataset = valid_dataset.map(lambda x, y: (dts_augmentation(x), y))
 
@@ -499,12 +429,14 @@ def syntax_creator():
   parser = argparse.ArgumentParser()
   parser.add_argument("-fp", "--filePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/ml/models/", help="Path to the model file and checkpoint.")
   parser.add_argument("-dfp", "--datasetFilePath", type=str, default=f"/home/{os.getlogin()}/Dropbox/code/darkest/resources/ml/models/", help="Path to the model file and checkpoint.")
-  parser.add_argument("-ts", "--targetSize", type=tuple, default=(256, 256, 3), help="Target size.")
+  parser.add_argument("-ts", "--targetSize", type=tuple, default=(128, 256, 3), help="Target size.")
   parser.add_argument("-ep", "--epochs", type=int, default=1, help="Number of epochs to train for.")
-  parser.add_argument("-lr", "--learningRate", type=float, default=0.005, help="Learning rate.")
+  parser.add_argument("-lr", "--learningRate", type=float, default=0.01, help="Learning rate.")
   parser.add_argument("-bs", "--batchSize", type=int, default=4*DISTRIBUTE_STRATEGY.num_replicas_in_sync, help="Batch size.")
   parser.add_argument("-mp", "--multiProcessing", type=bool, default=True if platform.system()=="Linux" else False, help="Wheter or not to use multi threading.")
   parser.add_argument("-now", "--numberOfWorkers", type=int, default=4, help="Number of workers to use for training.")
+  parser.add_argument("-noc", "--numberOfClasses", type=int, default=4, help="Number of classes to use for training / classification.")
+  parser.add_argument("-da", "--dataAugmentation", type=bool, default=True, help="Wheter or not to use data augmentation.")
   return parser.parse_args()
 
 
@@ -518,20 +450,14 @@ if __name__ == "__main__":
     fi_train, fi_valid, fi_root.absoluteFilePath(),
     target_size=DatasetConfig.DATA_SHAPE[:2],
     batch_size=args.batchSize,
-    # data_augmentation=DatasetConfig,
-    data_augmentation=True,
+    data_augmentation=args.dataAugmentation,
   )
 
 
   # Start a context manager using the distributed strategy previously defined.
   # This scope ensures that the operations defined within it are distributed across the available devices as per the strategy.
   with DISTRIBUTE_STRATEGY.scope():
-    # Get the model by calling the 'get_model' function.
-    model = Classifier4(args.filePath, num_classes=DatasetConfig.NUM_CLASSES, input_shape=args.targetSize)
-    # Compile the model. This step configures the model for training
-    # 'loss' is set to 'categorical_crossentropy', which is a common choice for classification tasks.
-    # 'optimizer' is an Adam optimizer with a specific learning rate from the training configuration.
-    # 'metrics' is a list of metrics to be evaluated by the model during training and testing, here it's set to track 'accuracy'.
+    model = Classifier4(args.filePath, num_classes=args.numberOfClasses, input_shape=args.targetSize)
     model.compile(
       optimizer=tfk.optimizers.Adam(learning_rate=args.learningRate),
       loss=tfk.losses.CategoricalCrossentropy(),
@@ -540,14 +466,13 @@ if __name__ == "__main__":
     )
 
 
-
   history = model.train(
     train_dts=train_dataset,
     validation_dts=valid_dataset,
     epochs=args.epochs,
     callbacks=[
       model.cb_checkpoint(),
-      tfk.callbacks.LearningRateScheduler(lr_schedule)
+      # tfk.callbacks.LearningRateScheduler(lr_schedule)
     ],
     multithreading=args.multiProcessing,
     batch_size=args.batchSize,
@@ -560,7 +485,6 @@ if __name__ == "__main__":
   # Reload
   model_reloaded = tfk.models.load_model(f"{model.fimodel.filePath()}/{model.name}.keras", compile=True)
   model_reloaded.sequential.summary()
-
 
 
   valid_dataset = tfk.utils.image_dataset_from_directory(
