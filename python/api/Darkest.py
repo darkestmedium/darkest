@@ -17,10 +17,15 @@ class iofile(aif.FileIO):
 
 
 
-class iodata(aid.DataIO):
+class iods(aid.DatasetIO):
 	"""Import wrapper for the api.io.data.FileIO class.
 	"""
 
+
+
+class iods_segmentation(aid.SegmentationDataset):
+	"""Import wrapper for the api.io.data.FileIO class.
+	"""
 
 
 

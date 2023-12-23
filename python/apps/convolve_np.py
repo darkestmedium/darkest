@@ -56,7 +56,6 @@ def convolve(
   return output_array.astype(np.int32)
 
 
-
 kernel = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]])
 
 input_array = np.array([[7,2,3,3,8],[4,5,3,8,4],[3,3,2,8,4],[2,8,7,2,7],[5,4,4,5,4]])

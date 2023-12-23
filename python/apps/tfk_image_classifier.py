@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator 
 
 from dataclasses import dataclass
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
+# from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
 # Darkest APi imports
 from api import np
@@ -69,7 +69,7 @@ DISTRIBUTE_STRATEGY = tf.distribute.MirroredStrategy()
 
 
 
-fi_root = qtc.QFileInfo("/home/darkest/Dropbox/code/dataset/classification/opencv-TF-course-project-1-image-classification/dataset")
+fi_root = qtc.QFileInfo("/home/darkest/Dropbox/code/resources/dataset/classification/opencv-TF-course-project-1-image-classification/dataset")
 fi_test, fi_train, fi_valid = da.iofile.listdir(fi_root.absoluteFilePath(), ["*"], filters=qtc.QDir.Dirs, includeSubDirectories=qtc.QDirIterator.NoIteratorFlags)
 
 
@@ -317,32 +317,50 @@ class Classifier4(daml.dnnmodel):
     Classifier4.fimodel = qtc.QFileInfo(f"{models_path}{name}/")
     Classifier4.fimodelcp = qtc.QFileInfo(f"{Classifier4.fimodel.absoluteFilePath()}checkpoint/")
     [da.iofile.mkdir(fi.absoluteFilePath()) for fi in [Classifier4.fimodel, Classifier4.fimodelcp]]  # Create paths -.-
+    self.num_classes = num_classes
+    # self.sequential = tfk.Sequential(
+    #   name="Sequential",
+    #   layers=[
+    #     tfk.layers.Rescaling(1./255, input_shape=input_shape),
 
-    self.sequential = tfk.Sequential(
-      name="Sequential",
-      layers=[
-        tfk.layers.Rescaling(1./255, input_shape=input_shape),
+    #     tfk.layers.Conv2D(16, 3, activation="relu", padding="same"),
+    #     tfk.layers.MaxPooling2D(),
 
-        tfk.layers.Conv2D(16, 3, activation="relu", padding="same"),
-        tfk.layers.MaxPooling2D(),
+    #     tfk.layers.Conv2D(32, 3, activation="relu", padding="same"),
+    #     tfk.layers.MaxPooling2D(),
 
-        tfk.layers.Conv2D(32, 3, activation="relu", padding="same"),
-        tfk.layers.MaxPooling2D(),
+    #     tfk.layers.Conv2D(64, 3, activation="relu", padding="same"),
+    #     tfk.layers.MaxPooling2D(),
 
-        tfk.layers.Conv2D(64, 3, activation="relu", padding="same"),
-        tfk.layers.MaxPooling2D(),
+    #     tfk.layers.Flatten(),
 
-        tfk.layers.Flatten(),
+    #     tfk.layers.Dense(128, activation="relu"),
+    #     tfk.layers.Dense(num_classes, activation="softmax")
+    #   ]
+    # )
 
-        tfk.layers.Dense(128, activation="relu"),
-        tfk.layers.Dense(num_classes, activation="softmax")
-      ]
-    )
+  # def call(self, inputs):
+  #   """Custom call method."""
+  #   return self.sequential(inputs)
+
+    self.ls = [
+      tf.keras.layers.Conv2D(32 ,3,strides=2, padding='same', activation='relu'),
+      tf.keras.layers.Conv2D(64 ,3,strides=2, padding='same', activation='relu'),
+      tf.keras.layers.Conv2D(128,3,strides=2, padding='same', activation='relu'),
+      tf.keras.layers.GlobalAveragePooling2D(),
+      tf.keras.layers.Dense(512, activation='relu'),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.num_classes, activation='softmax')
+    ]
+  
+  @tf.function
+  def call(self,x):
+    for l in self.ls:
+      x = l(x)
+    return x
 
 
-  def call(self, inputs):
-    """Custom call method."""
-    return self.sequential(inputs)
+
 
 
   def train(self, train_dts, validation_dts, callbacks=None, epochs:int=10, batch_size=32, multithreading:bool=True, workers:int=1):
@@ -478,13 +496,13 @@ if __name__ == "__main__":
   model_reloaded.sequential.summary()
 
 
-  valid_dataset = tfk.utils.image_dataset_from_directory(
-    fi_valid.absoluteFilePath(), 
-    label_mode='int',
-    color_mode='rgb', 
-    batch_size=args.batchSize, 
-    image_size=DatasetConfig.DATA_SHAPE[:2], 
-    shuffle=True, # shuffling to show images from all classes
-  )
-  get_sample_predictions(model=model_reloaded, dataset=valid_dataset)
+  # valid_dataset = tfk.utils.image_dataset_from_directory(
+  #   fi_valid.absoluteFilePath(), 
+  #   label_mode='int',
+  #   color_mode='rgb', 
+  #   batch_size=args.batchSize, 
+  #   image_size=DatasetConfig.DATA_SHAPE[:2], 
+  #   shuffle=True, # shuffling to show images from all classes
+  # )
+  # get_sample_predictions(model=model_reloaded, dataset=valid_dataset)
 
