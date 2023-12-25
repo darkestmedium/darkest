@@ -26,7 +26,7 @@ class DNN(tfk.Model):
     """
     if not path: path = cls.fimodelcp.absoluteFilePath()
 
-    da.iofile.mkdir(path)
+    da.iofile.mkdir(qtc.QFileInfo(path))
 
     return tfk.callbacks.ModelCheckpoint(
       filepath=path,

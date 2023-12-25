@@ -78,7 +78,7 @@ class FileIO():
 
 		"""
 		if isinstance(path, qtc.QFileInfo):
-			path = qtc.QDir(path.absolutePath())
+			path = qtc.QDir(path.absoluteDir())
 		elif isinstance(path, str):
 			path = qtc.QDir(path)
 		if not path.exists(): path.mkpath(path.absolutePath())
