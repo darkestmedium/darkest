@@ -32,6 +32,7 @@ class DNN(tfk.Model):
       filepath=path,
       monitor="accuracy",
       mode="max",
+      save_weights_only=False,
       save_best_only=best,
       verbose=1,
     )
