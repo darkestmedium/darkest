@@ -157,7 +157,7 @@ def get_data(fi_train, fi_valid, output, target_size=(224, 224), batch_size=32, 
     batch_size=batch_size,
     image_size=target_size,
   )
-  
+
   if data_augmentation: 
     dts_augmentation = da.iodata.augmentation()
     train_dataset = train_dataset.map(lambda x, y: (dts_augmentation(x), y))
