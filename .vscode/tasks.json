@@ -31,11 +31,12 @@
       "description": "Build Type:",
       "default": "Release",
       "type": "promptString"
+      
     },
     {
       "id": "run",
       "description": "Run module after build:",
-      "default": "dji-fpv",
+      "default": "dug",
       "type": "promptString"
     }
   ]

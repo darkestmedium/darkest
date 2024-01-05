@@ -37,7 +37,7 @@ endfunction()
 # include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Templates
-add_app("cpp/camera" "camera" "main.cpp")
+# add_app("cpp/camera" "camera" "main.cpp")
 # add_app("cpp/image" "image" "main.cpp")
 # add_app("cpp/video" "video" "main.cpp")
 
@@ -51,3 +51,4 @@ add_app("cpp/camera" "camera" "main.cpp")
 # add_app("cpp/chroma-keying" "chroma-keying" "main.cpp")
 # add_app("cpp/blemish-removal" "blemish-removal" "main.cpp")
 # add_app("cpp/dji-fpv" "dji-fpv" "main.cpp")
+add_app("cpp/dug" "dug" "main.cpp")
