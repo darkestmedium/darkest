@@ -13,7 +13,6 @@ import api.Darkest as da
 
 
 
-@tfk.saving.register_keras_serializable()
 class DNN(tfk.Model):
   """Keras Model subclass wrapper with convinience methods.
   """
@@ -30,7 +29,7 @@ class DNN(tfk.Model):
 
     return tfk.callbacks.ModelCheckpoint(
       filepath=path,
-      monitor="accuracy",
+      monitor="val_accuracy",
       mode="max",
       save_weights_only=False,
       save_best_only=best,
