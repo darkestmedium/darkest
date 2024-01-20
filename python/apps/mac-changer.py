@@ -51,6 +51,8 @@ def get_network_interface(mode:str="wireless") -> str:
   return interface
 
 
+
+
 def get_mac_address(interface:str) -> str:
   """Returns the mac address for the given network interface.
   """
@@ -64,11 +66,11 @@ def get_mac_address(interface:str) -> str:
 
 
 
-def windows(): ...
+def windows(args):
+  log.info("Windows support not yet implemented.")
 
 
 def linux(args):
-
   mac_curr = get_mac_address(args.interface)
 
   subprocess.call(["sudo", "ifconfig", args.interface, "down"])
@@ -83,7 +85,8 @@ def linux(args):
     log.warning(f"Mac address on {args.interface} could not be changed.")
 
 
-def macos(): ...
+def macos(args):
+  log.info("MacOS support not yet implemented.")
 
 
 
@@ -98,21 +101,19 @@ def syntaxCreator():
   parser.add_argument("-m", "--mac", type=str, default="22:11:22:33:44:55", help="Mac address '00:11:22:33:44:55'.")
   return parser.parse_args()
 
-
-
-
+ 
 if __name__ == "__main__":
   args = syntaxCreator()
 
   match platform.system():
     case "Windows":
-      log.info("Windows support not yet implemhybridented.")
+      windows(args)
 
     case "Linux":
       linux(args)
 
     case "Darwin":
-      log.info("MacOS support not yet implemented.")
+      macos(args)
 
     case _:
       log.info("Other platforms are not supported.")

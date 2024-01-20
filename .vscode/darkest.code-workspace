@@ -1,26 +1,19 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../../resources/"
+		}
+	],
   "settings": {
-    // Python
-    "python.defaultInterpreterPath": "/usr/bin/python",
-    "python.languageServer": "Pylance",
-    "python.envFile":	"${workspaceFolder}",
-    "python.analysis.extraPaths": [
-      "./python",
-    ],
-    "python.autoComplete.extraPaths": [
-      "./python",
-    ],
     "files.associations": {
       "ostream": "cpp",
+      "*.tcc": "cpp",
       "array": "cpp",
       "atomic": "cpp",
       "bit": "cpp",
-      "*.tcc": "cpp",
       "cctype": "cpp",
       "charconv": "cpp",
       "chrono": "cpp",
@@ -79,9 +72,10 @@
       "stop_token": "cpp",
       "streambuf": "cpp",
       "thread": "cpp",
+      "cinttypes": "cpp",
       "typeinfo": "cpp",
-      "variant": "cpp"
-    },
+      "variant": "cpp",
+      "codecvt": "cpp"
+    }
   }
 }
-

@@ -122,8 +122,7 @@ class SegmentationDataset(tfk.utils.Sequence):
       resized  = self.resize_transforms(image=img, mask=msk)
       img, msk = resized['image'], resized['mask']
       
-      if self.aug:
-        # Apply augmentations.
+      if self.aug:  # Apply augmentations.
         train_augment = self.train_transforms(image=img, mask=msk)
         img, msk = train_augment['image'], train_augment['mask']
 
