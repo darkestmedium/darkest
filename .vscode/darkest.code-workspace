@@ -1,13 +1,27 @@
 {
-	"folders": [
-		{
-			"path": ".."
-		},
-		{
-			"path": "../../../resources/"
-		}
-	],
+  "folders": [
+    {
+      "path": "../"
+    },
+    // {
+    //   "path": "../../../resources/"
+    // }
+    {
+      "path": "/home/darkest/Dropbox/os/fedora-kickstarts"
+    }
+  ],
   "settings": {
+    // Python
+    "python.languageServer": "Pylance",
+    // "python.defaultInterpreterPath": "/usr/bin/python",
+        
+    "python.analysis.extraPaths": [
+      "../python/darkest",
+    ],
+    "python.autoComplete.extraPaths": [
+      "../python/darkest",
+    ],
+
     "files.associations": {
       "ostream": "cpp",
       "*.tcc": "cpp",
