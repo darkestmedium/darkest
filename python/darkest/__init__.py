@@ -1,6 +1,8 @@
 # Built-in imports
+import sys
 import os
 import math
+import logging
 
 import subprocess as subp
 import platform
@@ -35,6 +37,11 @@ from enum import Enum
 # fiml = qtc.QFileInfo("resources/ml/")
 # fimlmodels = qtc.QFileInfo("resources/ml/models/")
 
+
+# logging
+log = logging.getLogger("darkest-api")
+log.addHandler(logging.StreamHandler(sys.stdout))
+log.setLevel(logging.INFO)
 
 
 
